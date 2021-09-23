@@ -219,4 +219,4 @@ load_from = None
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./work_dirs/oln_box/'
+work_dir='./out/oln_box/default'

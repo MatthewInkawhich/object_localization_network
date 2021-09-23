@@ -65,6 +65,8 @@ class CocoSplitDataset(CocoDataset):
                'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
                'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
                'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+
+
     VOC_CLASSES = (
                'airplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
                'cat', 'chair', 'cow', 'dining table', 'dog', 'horse', 
@@ -84,11 +86,138 @@ class CocoSplitDataset(CocoDataset):
                'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
                'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
                'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+
+
+    VOC10_CLASSES = (
+               'airplane', 'bicycle', 'bird', 'bottle', 'car',
+               'chair', 'cow', 'dog', 'person', 'tv')
+    NONVOC10_CLASSES = (
+               'motorcycle', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
+               'stop sign', 'parking meter', 'bench', 'cat', 'horse', 'sheep',
+               'elephant', 'bear', 'zebra', 'giraffe',
+               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
+               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+               'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
+               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
+               'hot dog', 'pizza', 'donut', 'cake', 'couch', 'potted plant',
+               'bed', 'dining table', 'toilet', 'laptop',
+               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
+               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
+               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+    
+
+    VOC5_CLASSES = (
+               'bicycle', 'car', 'chair', 'dog', 'person')
+    NONVOC5_CLASSES = (
+               'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
+               'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'horse', 'sheep',
+               'cow', 'elephant', 'bear', 'zebra', 'giraffe',
+               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
+               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+               'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
+               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
+               'hot dog', 'pizza', 'donut', 'cake', 'couch', 'potted plant',
+               'bed', 'dining table', 'toilet', 'tv', 'laptop',
+               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
+               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
+               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+
+
+    VOC2_CLASSES = (
+               'car', 'person')
+    NONVOC2_CLASSES = (
+               'bicycle', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
+               'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep',
+               'cow', 'elephant', 'bear', 'zebra', 'giraffe',
+               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
+               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+               'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
+               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
+               'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant',
+               'bed', 'dining table', 'toilet', 'tv', 'laptop',
+               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
+               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
+               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+
+
+    VOC_V_CLASSES = (
+               'airplane', 'bicycle', 'boat', 'bus', 'car', 'motorcycle', 'train')
+    NONVOC_V_CLASSES = (
+               'person',
+               'truck', 'traffic light', 'fire hydrant',
+               'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog',
+               'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe',
+               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
+               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+               'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
+               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
+               'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
+               'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop',
+               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
+               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
+               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+
+
+    VOC_H_CLASSES = (
+               'bottle', 'chair', 'dining table', 'potted plant', 'couch', 'tv')
+    NONVOC_H_CLASSES = (
+               'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
+               'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
+               'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog',
+               'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe',
+               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
+               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+               'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
+               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
+               'hot dog', 'pizza', 'donut', 'cake', 
+               'bed', 'toilet', 'laptop',
+               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
+               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
+               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+
+
+    VOC_A_CLASSES = (
+               'bird', 'cat', 'cow', 'dog', 'horse', 'sheep')
+    NONVOC_A_CLASSES = (
+               'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
+               'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
+               'stop sign', 'parking meter', 'bench', 
+               'elephant', 'bear', 'zebra', 'giraffe',
+               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
+               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+               'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
+               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
+               'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
+               'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop',
+               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
+               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
+               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+
+
     class_names_dict = {
         'all': CLASSES,
         'voc': VOC_CLASSES,
-        'nonvoc': NONVOC_CLASSES
+        'nonvoc': NONVOC_CLASSES,
+        'voc10': VOC10_CLASSES,
+        'nonvoc10': NONVOC10_CLASSES,
+        'voc5': VOC5_CLASSES,
+        'nonvoc5': NONVOC5_CLASSES,
+        'voc2': VOC2_CLASSES,
+        'nonvoc2': NONVOC2_CLASSES,
+        'vocv': VOC_V_CLASSES,
+        'nonvocv': NONVOC_V_CLASSES,
+        'voch': VOC_H_CLASSES,
+        'nonvoch': NONVOC_H_CLASSES,
+        'voca': VOC_A_CLASSES,
+        'nonvoca': NONVOC_A_CLASSES,
     }
+
 
     def load_annotations(self, ann_file):
         """Load annotation from COCO style annotation file.
@@ -103,9 +232,11 @@ class CocoSplitDataset(CocoDataset):
         self.coco = COCO(ann_file)
 
         self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
+        print("TRAIN CLASSES:", self.class_names_dict[self.train_class], len(self.class_names_dict[self.train_class]))
         self.train_cat_ids = self.coco.get_cat_ids(
             cat_names=self.class_names_dict[self.train_class]
             )
+        print("EVAL CLASSES:", self.class_names_dict[self.eval_class], len(self.class_names_dict[self.eval_class]))
         self.eval_cat_ids = self.coco.get_cat_ids(
             cat_names=self.class_names_dict[self.eval_class]
             )
