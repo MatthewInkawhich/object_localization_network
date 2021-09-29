@@ -61,6 +61,17 @@ def main():
         if gt_masks is not None:
             gt_masks = mask2ndarray(gt_masks)
 
+
+
+        print("\n\n")
+        print("filename:", item['filename'])
+        print("img:", item['img'].shape)
+        print("img_shape:", item['img_shape'])
+        print("gt_bboxes:", item['gt_bboxes'])
+        print("gt_labels:", item['gt_labels'])
+
+
+        exit()
         imshow_det_bboxes(
             item['img'],
             item['gt_bboxes'],
