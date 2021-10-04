@@ -1,5 +1,8 @@
 import inspect
 
+import math
+import random
+import cv2
 import mmcv
 import numpy as np
 from numpy import random
@@ -821,6 +824,7 @@ class PhotoMetricDistortion(object):
     8. randomly swap channels
 
     Args:
+        prob (float): The probability for perform ANY transformation
         brightness_delta (int): delta of brightness.
         contrast_range (tuple): range of contrast.
         saturation_range (tuple): range of saturation.
@@ -828,10 +832,14 @@ class PhotoMetricDistortion(object):
     """
 
     def __init__(self,
+                 prob=0.5,
                  brightness_delta=32,
                  contrast_range=(0.5, 1.5),
                  saturation_range=(0.5, 1.5),
                  hue_delta=18):
+        assert 0 <= prob <= 1.0, 'The probability should be in range [0,1]. '\
+            'got {prob}.'
+        self.prob = prob
         self.brightness_delta = brightness_delta
         self.contrast_lower, self.contrast_upper = contrast_range
         self.saturation_lower, self.saturation_upper = saturation_range
@@ -846,7 +854,6 @@ class PhotoMetricDistortion(object):
         Returns:
             dict: Result dict with images distorted.
         """
-
         if 'img_fields' in results:
             assert results['img_fields'] == ['img'], \
                 'Only single img_fields is allowed'
@@ -854,6 +861,10 @@ class PhotoMetricDistortion(object):
         assert img.dtype == np.float32, \
             'PhotoMetricDistortion needs the input image of dtype np.float32,'\
             ' please set "to_float32=True" in "LoadImageFromFile" pipeline'
+        
+        if np.random.rand() > self.prob:
+            return results
+
         # random brightness
         if random.randint(2):
             delta = random.uniform(-self.brightness_delta,
@@ -922,7 +933,8 @@ class Expand(object):
         mean (tuple): mean value of dataset.
         to_rgb (bool): if need to convert the order of mean to align with RGB.
         ratio_range (tuple): range of expand ratio.
-        prob (float): probability of applying this transformation
+        prob (float): The probability for perform transformation and
+            should be in range 0 to 1.
     """
 
     def __init__(self,
@@ -1026,12 +1038,14 @@ class MinIoURandomCrop(object):
     def __init__(self,
                  min_ious=(0.1, 0.3, 0.5, 0.7, 0.9),
                  min_crop_size=0.3,
-                 bbox_clip_border=True):
+                 bbox_clip_border=True,
+                 xmode=False):
         # 1: return ori img
         self.min_ious = min_ious
         self.sample_mode = (1, *min_ious, 0)
         self.min_crop_size = min_crop_size
         self.bbox_clip_border = bbox_clip_border
+        self.xmode = xmode
         self.bbox2label = {
             'gt_bboxes': 'gt_labels',
             'gt_bboxes_ignore': 'gt_labels_ignore'
@@ -1072,9 +1086,10 @@ class MinIoURandomCrop(object):
                 new_w = random.uniform(self.min_crop_size * w, w)
                 new_h = random.uniform(self.min_crop_size * h, h)
 
-                # h / w in [0.5, 2]
-                if new_h / new_w < 0.5 or new_h / new_w > 2:
-                    continue
+                if not self.xmode:
+                    # h / w in [0.5, 2]
+                    if new_h / new_w < 0.5 or new_h / new_w > 2:
+                        continue
 
                 left = random.uniform(w - new_w)
                 top = random.uniform(h - new_h)
@@ -1152,12 +1167,14 @@ class Corrupt(object):
 
     Args:
         corruption (str): Corruption name.
-        severity (int, optional): The severity of corruption. Default: 1.
+        severity_prob (List[float]): Len=6 list of probabilities of severity=0->5
     """
 
-    def __init__(self, corruption, severity=1):
+    def __init__(self, corruption, severity_prob=[.25,.25,.25,.25,0,0]):
+        assert sum(severity_prob)==1.0, 'The severity_prob should sum to 1.0'
+        assert min(severity_prob) >=0 and max(severity_prob) <= 1.0, 'A severity_prob is out of range [0,1]'
         self.corruption = corruption
-        self.severity = severity
+        self.severity_prob = severity_prob
 
     def __call__(self, results):
         """Call function to corrupt image.
@@ -1174,16 +1191,23 @@ class Corrupt(object):
         if 'img_fields' in results:
             assert results['img_fields'] == ['img'], \
                 'Only single img_fields is allowed'
+        # Generate current severity
+        curr_severity = np.random.choice(6, p=self.severity_prob)
+        #print("\n\ncurr_severity:", curr_severity, np.random.rand(), random.random())
+        # If curr_severity is 0, do not corrupt
+        if curr_severity == 0:
+            return results
+
         results['img'] = corrupt(
             results['img'].astype(np.uint8),
             corruption_name=self.corruption,
-            severity=self.severity)
+            severity=curr_severity)
         return results
 
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += f'(corruption={self.corruption}, '
-        repr_str += f'severity={self.severity})'
+        repr_str += f'severity_prob={self.severity_prob})'
         return repr_str
 
 
@@ -1802,3 +1826,629 @@ class CutOut(object):
                      else f'cutout_shape={self.candidates}, ')
         repr_str += f'fill_in={self.fill_in})'
         return repr_str
+
+
+
+##################################################################
+### Strong Augmentations
+##################################################################
+def random_negative(value, random_negative_prob):
+    """Randomly negate value based on random_negative_prob."""
+    return -value if np.random.rand() < random_negative_prob else value
+
+def bbox2fields():
+    """The key correspondence from bboxes to labels, masks and
+    segmentations."""
+    bbox2label = {
+        'gt_bboxes': 'gt_labels',
+        'gt_bboxes_ignore': 'gt_labels_ignore'
+    }
+    bbox2mask = {
+        'gt_bboxes': 'gt_masks',
+        'gt_bboxes_ignore': 'gt_masks_ignore'
+    }
+    bbox2seg = {
+        'gt_bboxes': 'gt_semantic_seg',
+    }
+    return bbox2label, bbox2mask, bbox2seg
+
+
+
+@PIPELINES.register_module()
+class DiscreteRotate(object):
+    """Apply Rotate Transformation to image (and its corresponding bbox, mask,
+    segmentation).
+
+    Args:
+        scale (int | float): Isotropic scale factor. Same in
+            ``mmcv.imrotate``.
+        center (int | float | tuple[float]): Center point (w, h) of the
+            rotation in the source image. If None, the center of the
+            image will be used. Same in ``mmcv.imrotate``.
+        img_fill_val (int | float | tuple): The fill value for image border.
+            If float, the same value will be used for all the three
+            channels of image. If tuple, the should be 3 elements (e.g.
+            equals the number of channels for image).
+        seg_ignore_label (int): The fill value used for segmentation map.
+            Note this value must equals ``ignore_label`` in ``semantic_head``
+            of the corresponding config. Default 255.
+        rotate_angles (List[int | float]): The maximum angles for rotate
+    """
+
+    def __init__(self,
+                 scale=1,
+                 center=None,
+                 img_fill_val=128,
+                 seg_ignore_label=255,
+                 rotate_angles=[0, 90, 180, 270]):
+        assert isinstance(scale, (int, float)), \
+            f'The scale must be type int or float. got type {type(scale)}.'
+        if isinstance(center, (int, float)):
+            center = (center, center)
+        elif isinstance(center, tuple):
+            assert len(center) == 2, 'center with type tuple must have '\
+                f'2 elements. got {len(center)} elements.'
+        else:
+            assert center is None, 'center must be None or type int, '\
+                f'float or tuple, got type {type(center)}.'
+        if isinstance(img_fill_val, (float, int)):
+            img_fill_val = tuple([float(img_fill_val)] * 3)
+        elif isinstance(img_fill_val, tuple):
+            assert len(img_fill_val) == 3, 'img_fill_val as tuple must '\
+                f'have 3 elements. got {len(img_fill_val)}.'
+            img_fill_val = tuple([float(val) for val in img_fill_val])
+        else:
+            raise ValueError(
+                'img_fill_val must be float or tuple with 3 elements.')
+        assert np.all([0 <= val <= 255 for val in img_fill_val]), \
+            'all elements of img_fill_val should between range [0,255]. '\
+            f'got {img_fill_val}.'
+        #assert isinstance(max_rotate_angle, (int, float)), 'max_rotate_angle '\
+        #    f'should be type int or float. got type {type(max_rotate_angle)}.'
+        self.scale = scale
+        self.center = center
+        self.img_fill_val = img_fill_val
+        self.seg_ignore_label = seg_ignore_label
+        self.rotate_angles = rotate_angles
+
+    def _rotate_img(self, results, angle, center=None, scale=1.0):
+        """Rotate the image.
+
+        Args:
+            results (dict): Result dict from loading pipeline.
+            angle (float): Rotation angle in degrees, positive values
+                mean clockwise rotation. Same in ``mmcv.imrotate``.
+            center (tuple[float], optional): Center point (w, h) of the
+                rotation. Same in ``mmcv.imrotate``.
+            scale (int | float): Isotropic scale factor. Same in
+                ``mmcv.imrotate``.
+        """
+        for key in results.get('img_fields', ['img']):
+            img = results[key].copy()
+            img_rotated = mmcv.imrotate(
+                img, angle, center, scale, border_value=self.img_fill_val)
+            results[key] = img_rotated.astype(img.dtype)
+
+    def _rotate_bboxes(self, results, rotate_matrix):
+        """Rotate the bboxes."""
+        h, w, c = results['img_shape']
+        for key in results.get('bbox_fields', []):
+            min_x, min_y, max_x, max_y = np.split(
+                results[key], results[key].shape[-1], axis=-1)
+            coordinates = np.stack([[min_x, min_y], [max_x, min_y],
+                                    [min_x, max_y],
+                                    [max_x, max_y]])  # [4, 2, nb_bbox, 1]
+            # pad 1 to convert from format [x, y] to homogeneous
+            # coordinates format [x, y, 1]
+            coordinates = np.concatenate(
+                (coordinates,
+                 np.ones((4, 1, coordinates.shape[2], 1), coordinates.dtype)),
+                axis=1)  # [4, 3, nb_bbox, 1]
+            coordinates = coordinates.transpose(
+                (2, 0, 1, 3))  # [nb_bbox, 4, 3, 1]
+            rotated_coords = np.matmul(rotate_matrix,
+                                       coordinates)  # [nb_bbox, 4, 2, 1]
+            rotated_coords = rotated_coords[..., 0]  # [nb_bbox, 4, 2]
+            min_x, min_y = np.min(
+                rotated_coords[:, :, 0], axis=1), np.min(
+                    rotated_coords[:, :, 1], axis=1)
+            max_x, max_y = np.max(
+                rotated_coords[:, :, 0], axis=1), np.max(
+                    rotated_coords[:, :, 1], axis=1)
+            min_x, min_y = np.clip(
+                min_x, a_min=0, a_max=w), np.clip(
+                    min_y, a_min=0, a_max=h)
+            max_x, max_y = np.clip(
+                max_x, a_min=min_x, a_max=w), np.clip(
+                    max_y, a_min=min_y, a_max=h)
+            results[key] = np.stack([min_x, min_y, max_x, max_y],
+                                    axis=-1).astype(results[key].dtype)
+
+    def _rotate_masks(self,
+                      results,
+                      angle,
+                      center=None,
+                      scale=1.0,
+                      fill_val=0):
+        """Rotate the masks."""
+        h, w, c = results['img_shape']
+        for key in results.get('mask_fields', []):
+            masks = results[key]
+            results[key] = masks.rotate((h, w), angle, center, scale, fill_val)
+
+    def _rotate_seg(self,
+                    results,
+                    angle,
+                    center=None,
+                    scale=1.0,
+                    fill_val=255):
+        """Rotate the segmentation map."""
+        for key in results.get('seg_fields', []):
+            seg = results[key].copy()
+            results[key] = mmcv.imrotate(
+                seg, angle, center, scale,
+                border_value=fill_val).astype(seg.dtype)
+
+    def _filter_invalid(self, results, min_bbox_size=0):
+        """Filter bboxes and corresponding masks too small after rotate
+        augmentation."""
+        bbox2label, bbox2mask, _ = bbox2fields()
+        for key in results.get('bbox_fields', []):
+            bbox_w = results[key][:, 2] - results[key][:, 0]
+            bbox_h = results[key][:, 3] - results[key][:, 1]
+            valid_inds = (bbox_w > min_bbox_size) & (bbox_h > min_bbox_size)
+            valid_inds = np.nonzero(valid_inds)[0]
+            results[key] = results[key][valid_inds]
+            # label fields. e.g. gt_labels and gt_labels_ignore
+            label_key = bbox2label.get(key)
+            if label_key in results:
+                results[label_key] = results[label_key][valid_inds]
+            # mask fields, e.g. gt_masks and gt_masks_ignore
+            mask_key = bbox2mask.get(key)
+            if mask_key in results:
+                results[mask_key] = results[mask_key][valid_inds]
+
+    def __call__(self, results):
+        """Call function to rotate images, bounding boxes, masks and semantic
+        segmentation maps.
+
+        Args:
+            results (dict): Result dict from loading pipeline.
+
+        Returns:
+            dict: Rotated results.
+        """
+        h, w = results['img'].shape[:2]
+        center = self.center
+        if center is None:
+            center = ((w - 1) * 0.5, (h - 1) * 0.5)
+        # Draw random integer angle here
+        #angle = np.random.randint(self.max_rotate_angle)
+        angle = random.choice(self.rotate_angles)
+        #angle = random_negative(angle, self.random_negative_prob)
+        self._rotate_img(results, angle, center, self.scale)
+        rotate_matrix = cv2.getRotationMatrix2D(center, -angle, self.scale)
+        self._rotate_bboxes(results, rotate_matrix)
+        self._rotate_masks(results, angle, center, self.scale, fill_val=0)
+        self._rotate_seg(
+            results, angle, center, self.scale, fill_val=self.seg_ignore_label)
+        self._filter_invalid(results)
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += f'scale={self.scale}, '
+        repr_str += f'center={self.center}, '
+        repr_str += f'img_fill_val={self.img_fill_val}, '
+        repr_str += f'seg_ignore_label={self.seg_ignore_label}, '
+        repr_str += f'rotate_angles={self.rotate_angles}, '
+        return repr_str
+
+
+
+@PIPELINES.register_module()
+class StrongRotate(object):
+    """Apply Rotate Transformation to image (and its corresponding bbox, mask,
+    segmentation).
+
+    Args:
+        scale (int | float): Isotropic scale factor. Same in
+            ``mmcv.imrotate``.
+        center (int | float | tuple[float]): Center point (w, h) of the
+            rotation in the source image. If None, the center of the
+            image will be used. Same in ``mmcv.imrotate``.
+        img_fill_val (int | float | tuple): The fill value for image border.
+            If float, the same value will be used for all the three
+            channels of image. If tuple, the should be 3 elements (e.g.
+            equals the number of channels for image).
+        seg_ignore_label (int): The fill value used for segmentation map.
+            Note this value must equals ``ignore_label`` in ``semantic_head``
+            of the corresponding config. Default 255.
+        prob (float): The probability for perform transformation and
+            should be in range 0 to 1.
+        max_rotate_angle (int | float): The maximum angles for rotate
+            transformation.
+        random_negative_prob (float): The probability that turns the
+             offset negative.
+    """
+
+    def __init__(self,
+                 scale=1,
+                 center=None,
+                 img_fill_val=128,
+                 seg_ignore_label=255,
+                 prob=0.5,
+                 max_rotate_angle=30,
+                 random_negative_prob=0.5):
+        assert isinstance(scale, (int, float)), \
+            f'The scale must be type int or float. got type {type(scale)}.'
+        if isinstance(center, (int, float)):
+            center = (center, center)
+        elif isinstance(center, tuple):
+            assert len(center) == 2, 'center with type tuple must have '\
+                f'2 elements. got {len(center)} elements.'
+        else:
+            assert center is None, 'center must be None or type int, '\
+                f'float or tuple, got type {type(center)}.'
+        if isinstance(img_fill_val, (float, int)):
+            img_fill_val = tuple([float(img_fill_val)] * 3)
+        elif isinstance(img_fill_val, tuple):
+            assert len(img_fill_val) == 3, 'img_fill_val as tuple must '\
+                f'have 3 elements. got {len(img_fill_val)}.'
+            img_fill_val = tuple([float(val) for val in img_fill_val])
+        else:
+            raise ValueError(
+                'img_fill_val must be float or tuple with 3 elements.')
+        assert np.all([0 <= val <= 255 for val in img_fill_val]), \
+            'all elements of img_fill_val should between range [0,255]. '\
+            f'got {img_fill_val}.'
+        assert 0 <= prob <= 1.0, 'The probability should be in range [0,1]. '\
+            'got {prob}.'
+        assert isinstance(max_rotate_angle, (int, float)), 'max_rotate_angle '\
+            f'should be type int or float. got type {type(max_rotate_angle)}.'
+        self.scale = scale
+        self.center = center
+        self.img_fill_val = img_fill_val
+        self.seg_ignore_label = seg_ignore_label
+        self.prob = prob
+        self.max_rotate_angle = max_rotate_angle
+        self.random_negative_prob = random_negative_prob
+
+    def _rotate_img(self, results, angle, center=None, scale=1.0):
+        """Rotate the image.
+
+        Args:
+            results (dict): Result dict from loading pipeline.
+            angle (float): Rotation angle in degrees, positive values
+                mean clockwise rotation. Same in ``mmcv.imrotate``.
+            center (tuple[float], optional): Center point (w, h) of the
+                rotation. Same in ``mmcv.imrotate``.
+            scale (int | float): Isotropic scale factor. Same in
+                ``mmcv.imrotate``.
+        """
+        for key in results.get('img_fields', ['img']):
+            img = results[key].copy()
+            img_rotated = mmcv.imrotate(
+                img, angle, center, scale, border_value=self.img_fill_val)
+            results[key] = img_rotated.astype(img.dtype)
+
+    def _rotate_bboxes(self, results, rotate_matrix):
+        """Rotate the bboxes."""
+        h, w, c = results['img_shape']
+        for key in results.get('bbox_fields', []):
+            min_x, min_y, max_x, max_y = np.split(
+                results[key], results[key].shape[-1], axis=-1)
+            coordinates = np.stack([[min_x, min_y], [max_x, min_y],
+                                    [min_x, max_y],
+                                    [max_x, max_y]])  # [4, 2, nb_bbox, 1]
+            # pad 1 to convert from format [x, y] to homogeneous
+            # coordinates format [x, y, 1]
+            coordinates = np.concatenate(
+                (coordinates,
+                 np.ones((4, 1, coordinates.shape[2], 1), coordinates.dtype)),
+                axis=1)  # [4, 3, nb_bbox, 1]
+            coordinates = coordinates.transpose(
+                (2, 0, 1, 3))  # [nb_bbox, 4, 3, 1]
+            rotated_coords = np.matmul(rotate_matrix,
+                                       coordinates)  # [nb_bbox, 4, 2, 1]
+            rotated_coords = rotated_coords[..., 0]  # [nb_bbox, 4, 2]
+            min_x, min_y = np.min(
+                rotated_coords[:, :, 0], axis=1), np.min(
+                    rotated_coords[:, :, 1], axis=1)
+            max_x, max_y = np.max(
+                rotated_coords[:, :, 0], axis=1), np.max(
+                    rotated_coords[:, :, 1], axis=1)
+            min_x, min_y = np.clip(
+                min_x, a_min=0, a_max=w), np.clip(
+                    min_y, a_min=0, a_max=h)
+            max_x, max_y = np.clip(
+                max_x, a_min=min_x, a_max=w), np.clip(
+                    max_y, a_min=min_y, a_max=h)
+            results[key] = np.stack([min_x, min_y, max_x, max_y],
+                                    axis=-1).astype(results[key].dtype)
+
+    def _rotate_masks(self,
+                      results,
+                      angle,
+                      center=None,
+                      scale=1.0,
+                      fill_val=0):
+        """Rotate the masks."""
+        h, w, c = results['img_shape']
+        for key in results.get('mask_fields', []):
+            masks = results[key]
+            results[key] = masks.rotate((h, w), angle, center, scale, fill_val)
+
+    def _rotate_seg(self,
+                    results,
+                    angle,
+                    center=None,
+                    scale=1.0,
+                    fill_val=255):
+        """Rotate the segmentation map."""
+        for key in results.get('seg_fields', []):
+            seg = results[key].copy()
+            results[key] = mmcv.imrotate(
+                seg, angle, center, scale,
+                border_value=fill_val).astype(seg.dtype)
+
+    def _filter_invalid(self, results, min_bbox_size=0):
+        """Filter bboxes and corresponding masks too small after rotate
+        augmentation."""
+        bbox2label, bbox2mask, _ = bbox2fields()
+        for key in results.get('bbox_fields', []):
+            bbox_w = results[key][:, 2] - results[key][:, 0]
+            bbox_h = results[key][:, 3] - results[key][:, 1]
+            valid_inds = (bbox_w > min_bbox_size) & (bbox_h > min_bbox_size)
+            valid_inds = np.nonzero(valid_inds)[0]
+            results[key] = results[key][valid_inds]
+            # label fields. e.g. gt_labels and gt_labels_ignore
+            label_key = bbox2label.get(key)
+            if label_key in results:
+                results[label_key] = results[label_key][valid_inds]
+            # mask fields, e.g. gt_masks and gt_masks_ignore
+            mask_key = bbox2mask.get(key)
+            if mask_key in results:
+                results[mask_key] = results[mask_key][valid_inds]
+
+    def __call__(self, results):
+        """Call function to rotate images, bounding boxes, masks and semantic
+        segmentation maps.
+
+        Args:
+            results (dict): Result dict from loading pipeline.
+
+        Returns:
+            dict: Rotated results.
+        """
+        if np.random.rand() > self.prob:
+            return results
+        h, w = results['img'].shape[:2]
+        center = self.center
+        if center is None:
+            center = ((w - 1) * 0.5, (h - 1) * 0.5)
+        # Draw random integer angle here
+        angle = np.random.randint(self.max_rotate_angle)
+        angle = random_negative(angle, self.random_negative_prob)
+        self._rotate_img(results, angle, center, self.scale)
+        rotate_matrix = cv2.getRotationMatrix2D(center, -angle, self.scale)
+        self._rotate_bboxes(results, rotate_matrix)
+        self._rotate_masks(results, angle, center, self.scale, fill_val=0)
+        self._rotate_seg(
+            results, angle, center, self.scale, fill_val=self.seg_ignore_label)
+        self._filter_invalid(results)
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += f'scale={self.scale}, '
+        repr_str += f'center={self.center}, '
+        repr_str += f'img_fill_val={self.img_fill_val}, '
+        repr_str += f'seg_ignore_label={self.seg_ignore_label}, '
+        repr_str += f'prob={self.prob}, '
+        repr_str += f'max_rotate_angle={self.max_rotate_angle}, '
+        repr_str += f'random_negative_prob={self.random_negative_prob})'
+        return repr_str
+
+
+
+@PIPELINES.register_module()
+class RandomAffine(object):
+    """Random affine transform data augmentation.
+
+    This operation randomly generates affine transform matrix which including
+    rotation, translation, shear and scaling transforms.
+
+    Args:
+        max_rotate_degree (float): Maximum degrees of rotation transform.
+            Default: 10.
+        max_translate_ratio (float): Maximum ratio of translation.
+            Default: 0.1.
+        scaling_ratio_range (tuple[float]): Min and max ratio of
+            scaling transform. Default: (0.5, 1.5).
+        max_shear_degree (float): Maximum degrees of shear
+            transform. Default: 2.
+        border (tuple[int]): Distance from height and width sides of input
+            image to adjust output shape. Only used in mosaic dataset.
+            Default: (0, 0).
+        border_val (tuple[int]): Border padding values of 3 channels.
+            Default: (114, 114, 114).
+        min_bbox_size (float): Width and height threshold to filter bboxes.
+            If the height or width of a box is smaller than this value, it
+            will be removed. Default: 2.
+        min_area_ratio (float): Threshold of area ratio between
+            original bboxes and wrapped bboxes. If smaller than this value,
+            the box will be removed. Default: 0.2.
+        max_aspect_ratio (float): Aspect ratio of width and height
+            threshold to filter bboxes. If max(h/w, w/h) larger than this
+            value, the box will be removed.
+    """
+
+    def __init__(self,
+                 max_rotate_degree=10.0,
+                 max_translate_ratio=0.1,
+                 scaling_ratio_range=(0.5, 1.5),
+                 max_shear_degree=2.0,
+                 border=(0, 0),
+                 border_val=(114, 114, 114),
+                 min_bbox_size=2,
+                 min_area_ratio=0.2,
+                 max_aspect_ratio=20):
+        assert 0 <= max_translate_ratio <= 1
+        assert scaling_ratio_range[0] <= scaling_ratio_range[1]
+        assert scaling_ratio_range[0] > 0
+        self.max_rotate_degree = max_rotate_degree
+        self.max_translate_ratio = max_translate_ratio
+        self.scaling_ratio_range = scaling_ratio_range
+        self.max_shear_degree = max_shear_degree
+        self.border = border
+        self.border_val = border_val
+        self.min_bbox_size = min_bbox_size
+        self.min_area_ratio = min_area_ratio
+        self.max_aspect_ratio = max_aspect_ratio
+
+    def __call__(self, results):
+        img = results['img']
+        height = img.shape[0] + self.border[0] * 2
+        width = img.shape[1] + self.border[1] * 2
+
+        # Center
+        center_matrix = np.eye(3, dtype=np.float32)
+        center_matrix[0, 2] = -img.shape[1] / 2  # x translation (pixels)
+        center_matrix[1, 2] = -img.shape[0] / 2  # y translation (pixels)
+
+        # Rotation
+        rotation_degree = random.uniform(-self.max_rotate_degree,
+                                         self.max_rotate_degree)
+        rotation_matrix = self._get_rotation_matrix(rotation_degree)
+
+        # Scaling
+        scaling_ratio = random.uniform(self.scaling_ratio_range[0],
+                                       self.scaling_ratio_range[1])
+        scaling_matrix = self._get_scaling_matrix(scaling_ratio)
+
+        # Shear
+        x_degree = random.uniform(-self.max_shear_degree,
+                                  self.max_shear_degree)
+        y_degree = random.uniform(-self.max_shear_degree,
+                                  self.max_shear_degree)
+        shear_matrix = self._get_shear_matrix(x_degree, y_degree)
+
+        # Translation
+        trans_x = random.uniform(0.5 - self.max_translate_ratio,
+                                 0.5 + self.max_translate_ratio) * width
+        trans_y = random.uniform(0.5 - self.max_translate_ratio,
+                                 0.5 + self.max_translate_ratio) * height
+        translate_matrix = self._get_translation_matrix(trans_x, trans_y)
+
+        warp_matrix = (
+            translate_matrix @ shear_matrix @ rotation_matrix @ scaling_matrix
+            @ center_matrix)
+
+        img = cv2.warpPerspective(
+            img,
+            warp_matrix,
+            dsize=(width, height),
+            borderValue=self.border_val)
+        results['img'] = img
+        results['img_shape'] = img.shape
+
+        for key in results.get('bbox_fields', []):
+            bboxes = results[key]
+            num_bboxes = len(bboxes)
+            if num_bboxes:
+                # homogeneous coordinates
+                xs = bboxes[:, [0, 2, 2, 0]].reshape(num_bboxes * 4)
+                ys = bboxes[:, [1, 3, 3, 1]].reshape(num_bboxes * 4)
+                ones = np.ones_like(xs)
+                points = np.vstack([xs, ys, ones])
+
+                warp_points = warp_matrix @ points
+                warp_points = warp_points[:2] / warp_points[2]
+                xs = warp_points[0].reshape(num_bboxes, 4)
+                ys = warp_points[1].reshape(num_bboxes, 4)
+
+                warp_bboxes = np.vstack(
+                    (xs.min(1), ys.min(1), xs.max(1), ys.max(1))).T
+
+                warp_bboxes[:, [0, 2]] = warp_bboxes[:, [0, 2]].clip(0, width)
+                warp_bboxes[:, [1, 3]] = warp_bboxes[:, [1, 3]].clip(0, height)
+
+                # filter bboxes
+                valid_index = self.filter_gt_bboxes(bboxes * scaling_ratio,
+                                                    warp_bboxes)
+                results[key] = warp_bboxes[valid_index]
+                if key in ['gt_bboxes']:
+                    if 'gt_labels' in results:
+                        results['gt_labels'] = results['gt_labels'][
+                            valid_index]
+                    if 'gt_masks' in results:
+                        raise NotImplementedError(
+                            'RandomAffine only supports bbox.')
+        return results
+
+    def filter_gt_bboxes(self, origin_bboxes, wrapped_bboxes):
+        origin_w = origin_bboxes[:, 2] - origin_bboxes[:, 0]
+        origin_h = origin_bboxes[:, 3] - origin_bboxes[:, 1]
+        wrapped_w = wrapped_bboxes[:, 2] - wrapped_bboxes[:, 0]
+        wrapped_h = wrapped_bboxes[:, 3] - wrapped_bboxes[:, 1]
+        aspect_ratio = np.maximum(wrapped_w / (wrapped_h + 1e-16),
+                                  wrapped_h / (wrapped_w + 1e-16))
+
+        wh_valid_idx = (wrapped_w > self.min_bbox_size) & \
+                       (wrapped_h > self.min_bbox_size)
+        area_valid_idx = wrapped_w * wrapped_h / (origin_w * origin_h +
+                                                  1e-16) > self.min_area_ratio
+        aspect_ratio_valid_idx = aspect_ratio < self.max_aspect_ratio
+        return wh_valid_idx & area_valid_idx & aspect_ratio_valid_idx
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += f'(max_rotate_degree={self.max_rotate_degree}, '
+        repr_str += f'max_translate_ratio={self.max_translate_ratio}, '
+        repr_str += f'scaling_ratio={self.scaling_ratio_range}, '
+        repr_str += f'max_shear_degree={self.max_shear_degree}, '
+        repr_str += f'border={self.border}, '
+        repr_str += f'border_val={self.border_val}, '
+        repr_str += f'min_bbox_size={self.min_bbox_size}, '
+        repr_str += f'min_area_ratio={self.min_area_ratio}, '
+        repr_str += f'max_aspect_ratio={self.max_aspect_ratio})'
+        return repr_str
+
+    @staticmethod
+    def _get_rotation_matrix(rotate_degrees):
+        radian = math.radians(rotate_degrees)
+        rotation_matrix = np.array(
+            [[np.cos(radian), -np.sin(radian), 0.],
+             [np.sin(radian), np.cos(radian), 0.], [0., 0., 1.]],
+            dtype=np.float32)
+        return rotation_matrix
+
+    @staticmethod
+    def _get_scaling_matrix(scale_ratio):
+        scaling_matrix = np.array(
+            [[scale_ratio, 0., 0.], [0., scale_ratio, 0.], [0., 0., 1.]],
+            dtype=np.float32)
+        return scaling_matrix
+
+    @staticmethod
+    def _get_share_matrix(scale_ratio):
+        scaling_matrix = np.array(
+            [[scale_ratio, 0., 0.], [0., scale_ratio, 0.], [0., 0., 1.]],
+            dtype=np.float32)
+        return scaling_matrix
+
+    @staticmethod
+    def _get_shear_matrix(x_shear_degrees, y_shear_degrees):
+        x_radian = math.radians(x_shear_degrees)
+        y_radian = math.radians(y_shear_degrees)
+        shear_matrix = np.array([[1, np.tan(x_radian), 0.],
+                                 [np.tan(y_radian), 1, 0.], [0., 0., 1.]],
+                                dtype=np.float32)
+        return shear_matrix
+
+    @staticmethod
+    def _get_translation_matrix(x, y):
+        translation_matrix = np.array([[1, 0., x], [0., 1, y], [0., 0., 1.]],
+                                      dtype=np.float32)
+        return translation_matrix

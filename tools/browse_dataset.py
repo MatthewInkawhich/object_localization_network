@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument(
         '--show-interval',
         type=float,
-        default=2,
+        default=1,
         help='the interval of show (s)')
     args = parser.parse_args()
     return args
@@ -62,16 +62,14 @@ def main():
             gt_masks = mask2ndarray(gt_masks)
 
 
-
         print("\n\n")
         print("filename:", item['filename'])
         print("img:", item['img'].shape)
         print("img_shape:", item['img_shape'])
         print("gt_bboxes:", item['gt_bboxes'])
         print("gt_labels:", item['gt_labels'])
+        #exit()
 
-
-        exit()
         imshow_det_bboxes(
             item['img'],
             item['gt_bboxes'],

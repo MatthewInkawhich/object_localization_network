@@ -153,7 +153,6 @@ train_pipeline = [
     dict(type='LoadAnnotations', with_bbox=True),
     dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='StrongRotate', prob=1.0, max_rotate_angle=180),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
@@ -202,8 +201,8 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[6, 7])
-total_epochs = 8
+    step=[12, 14])
+total_epochs = 16
 
 checkpoint_config = dict(interval=2)
 # yapf:disable
@@ -220,4 +219,4 @@ load_from = None
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/aug_rotate'
+work_dir='./out/oln_box/voc_split_2x/'

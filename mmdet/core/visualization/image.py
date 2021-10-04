@@ -98,7 +98,7 @@ def imshow_det_bboxes(img,
     if labels.shape[0] > 0:
         if mask_color is None:
             # random color
-            np.random.seed(42)
+            #np.random.seed(42)
             mask_colors = [
                 np.random.randint(0, 256, (1, 3), dtype=np.uint8)
                 for _ in range(max(labels) + 1)

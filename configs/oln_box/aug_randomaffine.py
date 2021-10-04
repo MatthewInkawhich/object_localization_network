@@ -151,9 +151,17 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
+    dict(type='RandomAffine', max_rotate_degree=10.0,
+                          max_translate_ratio=0.1,
+                          scaling_ratio_range=(0.5, 1.5),
+                          max_shear_degree=2.0,
+                          border=(0, 0),
+                          border_val=(114, 114, 114),
+                          min_bbox_size=2,
+                          min_area_ratio=0.2,
+                          max_aspect_ratio=20),
     dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='StrongRotate', prob=1.0, max_rotate_angle=180),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
@@ -220,4 +228,4 @@ load_from = None
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/aug_rotate'
+work_dir='./out/oln_box/aug_randomaffine'
