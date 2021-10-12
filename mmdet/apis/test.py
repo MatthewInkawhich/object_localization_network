@@ -13,6 +13,96 @@ from mmcv.runner import get_dist_info
 from mmdet.core import encode_mask_results
 
 
+def single_gpu_collect_preds(model,
+                    data_loader,
+                    score_thr):
+    model.eval()
+    results = []
+    dataset = data_loader.dataset
+    prog_bar = mmcv.ProgressBar(len(dataset))
+    for i, data in enumerate(data_loader):
+        with torch.no_grad():
+            # Forward pass to get bbox preds
+            result = model(return_loss=False, rescale=True, **data)
+            #print("\nbefore:", result, result[0][0].shape)
+            # Filter boxes by score
+            for b_idx in range(len(result)):
+                for c_idx in range(len(result[b_idx])):
+                    curr_preds = result[b_idx][c_idx] 
+                    #print("\nbefore:", curr_preds, curr_preds.shape)
+                    filtered_preds = curr_preds[curr_preds[:, -1] >= score_thr]
+                    #print("\nafter:", filtered_preds, filtered_preds.shape)
+                    result[b_idx][c_idx] = filtered_preds
+
+        batch_size = len(result)
+        #print("\nafter:", result, result[0][0].shape)
+        # encode mask results
+        if isinstance(result[0], tuple):
+            result = [(bbox_results, encode_mask_results(mask_results))
+                      for bbox_results, mask_results in result]
+        results.extend(result)
+
+        for _ in range(batch_size):
+            prog_bar.update()
+    return results
+
+
+def multi_gpu_collect_preds(model, data_loader, score_thr, tmpdir=None, gpu_collect=False):
+    """Test model with multiple gpus.
+
+    This method tests model with multiple gpus and collects the results
+    under two different modes: gpu and cpu modes. By setting 'gpu_collect=True'
+    it encodes results to gpu tensors and use gpu communication for results
+    collection. On cpu mode it saves the results on different gpus to 'tmpdir'
+    and collects them by the rank 0 worker.
+
+    Args:
+        model (nn.Module): Model to be tested.
+        data_loader (nn.Dataloader): Pytorch data loader.
+        score_thr (float): Score threshold (filter boxes below this)
+        gpu_collect (bool): Option to use either gpu or cpu to collect results.
+
+    Returns:
+        list: The prediction results.
+    """
+    model.eval()
+    results = []
+    dataset = data_loader.dataset
+    rank, world_size = get_dist_info()
+    if rank == 0:
+        prog_bar = mmcv.ProgressBar(len(dataset))
+    time.sleep(2)  # This line can prevent deadlock problem in some cases.
+    for i, data in enumerate(data_loader):
+        with torch.no_grad():
+            result = model(return_loss=False, rescale=True, **data)
+            # Filter boxes by score
+            for b_idx in range(len(result)):
+                for c_idx in range(len(result[b_idx])):
+                    curr_preds = result[b_idx][c_idx] 
+                    #print("\nbefore:", curr_preds, curr_preds.shape)
+                    filtered_preds = curr_preds[curr_preds[:, -1] >= score_thr]
+                    #print("\nafter:", filtered_preds, filtered_preds.shape)
+                    result[b_idx][c_idx] = filtered_preds
+            # encode mask results
+            if isinstance(result[0], tuple):
+                result = [(bbox_results, encode_mask_results(mask_results))
+                          for bbox_results, mask_results in result]
+        results.extend(result)
+
+        if rank == 0:
+            batch_size = len(result)
+            for _ in range(batch_size * world_size):
+                prog_bar.update()
+
+    # collect results from all ranks
+    if gpu_collect:
+        results = collect_results_gpu(results, len(dataset))
+    else:
+        results = collect_results_cpu(results, len(dataset), tmpdir)
+    return results
+
+
+
 def single_gpu_test(model,
                     data_loader,
                     show=False,
@@ -25,6 +115,11 @@ def single_gpu_test(model,
     for i, data in enumerate(data_loader):
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
+            #print("result:", result, result[0][0].shape, len(result[0]), len(result))
+            #for ann_i in range(result[0][0].shape[0]):
+            #    if result[0][0][ann_i][-1] >= show_score_thr:
+            #        print(result[0][0][ann_i])
+
 
         batch_size = len(result)
         if show or out_dir:

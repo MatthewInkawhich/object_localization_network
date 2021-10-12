@@ -48,6 +48,10 @@ def main():
     args = parse_args()
     cfg = retrieve_data_cfg(args.config, args.skip_type)
 
+    print("\ncfg.data.train.items():")
+    for k,v in cfg.data.train.items():
+        print(k,v)
+
     dataset = build_dataset(cfg.data.train)
 
     progress_bar = mmcv.ProgressBar(len(dataset))
@@ -63,11 +67,14 @@ def main():
 
 
         print("\n\n")
-        print("filename:", item['filename'])
-        print("img:", item['img'].shape)
-        print("img_shape:", item['img_shape'])
-        print("gt_bboxes:", item['gt_bboxes'])
-        print("gt_labels:", item['gt_labels'])
+        for k,v in item.items():
+            print(k,v)
+            
+        #print("filename:", item['filename'])
+        #print("img:", item['img'].shape)
+        #print("img_shape:", item['img_shape'])
+        #print("gt_bboxes:", item['gt_bboxes'])
+        #print("gt_labels:", item['gt_labels'])
         #exit()
 
         imshow_det_bboxes(

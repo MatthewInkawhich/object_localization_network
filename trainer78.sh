@@ -30,8 +30,8 @@
 
 
 ### Round2
-bash tools/dist_train.sh configs/oln_box/round2/voc_split_r2_s80.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round2/voc_split_r2_s80.py out/oln_box/round2/voc_split_r2_s80/latest.pth 4
+bash tools/dist_train.sh configs/oln_box/round2/voc_split_r2_s78.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/round2/voc_split_r2_s78.py out/oln_box/round2/voc_split_r2_s78/latest.pth 4
 #bash tools/dist_train.sh configs/oln_box/round2/voc_split_r2_s78.py 4
 #bash tools/dist_train.sh configs/oln_box/round2/voc_split_r2_s76.py 4
 #bash tools/dist_train.sh configs/oln_box/round2/voc_split_r2_s74.py 4
