@@ -1,7 +1,7 @@
 _base_ = [
-    '../_base_/datasets/minicoco_detection.py',
-    '../_base_/schedules/schedule_1x.py', 
-    '../_base_/default_runtime.py'
+    '../../_base_/datasets/coco_detection.py',
+    '../../_base_/schedules/schedule_ft4.py', 
+    '../../_base_/default_runtime.py'
 ]
 # model settings
 model = dict(
@@ -144,15 +144,15 @@ model = dict(
     ))
 
 # Dataset
-dataset_type = 'CocoSplitDataset'
-data_root = 'data/minicoco/'
+dataset_type = 'CocoUSplitDataset'
+data_root = 'data/coco/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    #dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),
-    dict(type='Resize', img_scale=(800, 1333), keep_ratio=False),
+    dict(type='MinIoURandomCrop', min_ious=(0.1, 0.3, 0.5, 0.7, 0.9), min_crop_size=0.1, xmode=True),  # crop
+    dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),  # zoom
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
@@ -178,6 +178,7 @@ data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
+        ann_file='out/oln_box/round1/voc_cropzoomx_ft4_r1_s80/annotations_for_round2_s84.json',
         is_class_agnostic=True,
         train_class='voc',
         eval_class='nonvoc',
@@ -197,13 +198,13 @@ data = dict(
         type=dataset_type,
         pipeline=test_pipeline))
 
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=500,
-    warmup_ratio=0.001,
-    step=[6, 7])
-total_epochs = 8
+#lr_config = dict(
+#    policy='step',
+#    warmup='linear',
+#    warmup_iters=500,
+#    warmup_ratio=0.001,
+#    step=[6, 7])
+#total_epochs = 8
 
 checkpoint_config = dict(interval=2)
 # yapf:disable
@@ -216,8 +217,8 @@ log_config = dict(
 # yapf:enable
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = None
+load_from = 'out/oln_box/round1/voc_cropzoomx_ft4_r1_s80/latest.pth'
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/voc_test/'
+work_dir='./out/oln_box/round2/voc_cropzoomx_ft4_r2_s80_s84'

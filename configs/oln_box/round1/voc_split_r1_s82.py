@@ -1,7 +1,7 @@
 _base_ = [
-    '../_base_/datasets/minicoco_detection.py',
-    '../_base_/schedules/schedule_1x.py', 
-    '../_base_/default_runtime.py'
+    '../../_base_/datasets/coco_detection.py',
+    '../../_base_/schedules/schedule_1x.py', 
+    '../../_base_/default_runtime.py'
 ]
 # model settings
 model = dict(
@@ -144,15 +144,14 @@ model = dict(
     ))
 
 # Dataset
-dataset_type = 'CocoSplitDataset'
-data_root = 'data/minicoco/'
+dataset_type = 'CocoUSplitDataset'
+data_root = 'data/coco/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    #dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),
-    dict(type='Resize', img_scale=(800, 1333), keep_ratio=False),
+    dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
@@ -178,6 +177,7 @@ data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
+        ann_file='out/oln_box/round0/voc_split/annotations_for_round1_s82.json',
         is_class_agnostic=True,
         train_class='voc',
         eval_class='nonvoc',
@@ -220,4 +220,4 @@ load_from = None
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/voc_test/'
+work_dir='./out/oln_box/round1/voc_split_r1_s82/'

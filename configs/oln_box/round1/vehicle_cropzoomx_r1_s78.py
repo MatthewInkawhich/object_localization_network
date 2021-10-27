@@ -1,7 +1,7 @@
 _base_ = [
-    '../_base_/datasets/minicoco_detection.py',
-    '../_base_/schedules/schedule_1x.py', 
-    '../_base_/default_runtime.py'
+    '../../_base_/datasets/coco_detection.py',
+    '../../_base_/schedules/schedule_1x.py', 
+    '../../_base_/default_runtime.py'
 ]
 # model settings
 model = dict(
@@ -144,15 +144,15 @@ model = dict(
     ))
 
 # Dataset
-dataset_type = 'CocoSplitDataset'
-data_root = 'data/minicoco/'
+dataset_type = 'CocoUSplitDataset'
+data_root = 'data/coco/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    #dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),
-    dict(type='Resize', img_scale=(800, 1333), keep_ratio=False),
+    dict(type='MinIoURandomCrop', min_ious=(0.1, 0.3, 0.5, 0.7, 0.9), min_crop_size=0.1, xmode=True),  # crop
+    dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),  # zoom
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
@@ -178,22 +178,23 @@ data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
+        ann_file='out/oln_box/round0/vehicle_cropzoomx/annotations_for_round1_s78.json',
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='vehicle',
+        eval_class='nonvehicle',
         type=dataset_type,
         pipeline=train_pipeline,
         ),
     val=dict(
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='vehicle',
+        eval_class='nonvehicle',
         type=dataset_type,
         pipeline=test_pipeline),
     test=dict(
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='vehicle',
+        eval_class='nonvehicle',
         type=dataset_type,
         pipeline=test_pipeline))
 
@@ -220,4 +221,4 @@ load_from = None
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/voc_test/'
+work_dir='./out/oln_box/round1/vehicle_cropzoomx_r1_s78'

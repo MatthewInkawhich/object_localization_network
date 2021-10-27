@@ -35,7 +35,12 @@ def single_gpu_collect_preds(model,
                     result[b_idx][c_idx] = filtered_preds
 
         batch_size = len(result)
-        #print("\nafter:", result, result[0][0].shape)
+
+        #print("data:", data)
+        #print("result:", result)
+        #if i != 0 and i % 5 == 0:
+        #    exit()
+
         # encode mask results
         if isinstance(result[0], tuple):
             result = [(bbox_results, encode_mask_results(mask_results))
@@ -44,6 +49,10 @@ def single_gpu_collect_preds(model,
 
         for _ in range(batch_size):
             prog_bar.update()
+
+        #if i != 0 and i % 5 == 0:
+        #    break
+
     return results
 
 
@@ -93,6 +102,9 @@ def multi_gpu_collect_preds(model, data_loader, score_thr, tmpdir=None, gpu_coll
             batch_size = len(result)
             for _ in range(batch_size * world_size):
                 prog_bar.update()
+
+        #if i != 0 and i % 5 == 0:
+        #    break
 
     # collect results from all ranks
     if gpu_collect:

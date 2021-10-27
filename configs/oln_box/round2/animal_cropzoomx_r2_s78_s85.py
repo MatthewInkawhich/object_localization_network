@@ -151,7 +151,8 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
+    dict(type='MinIoURandomCrop', min_ious=(0.1, 0.3, 0.5, 0.7, 0.9), min_crop_size=0.1, xmode=True),  # crop
+    dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),  # zoom
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
@@ -177,23 +178,23 @@ data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
-        ann_file='out/oln_box/voc_split/annotations_for_round2_s76.json',
+        ann_file='out/oln_box/round1/animal_cropzoomx_r1_s78/annotations_for_round2_s85.json',
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='animal',
+        eval_class='nonanimal',
         type=dataset_type,
         pipeline=train_pipeline,
         ),
     val=dict(
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='animal',
+        eval_class='nonanimal',
         type=dataset_type,
         pipeline=test_pipeline),
     test=dict(
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='animal',
+        eval_class='nonanimal',
         type=dataset_type,
         pipeline=test_pipeline))
 
@@ -220,4 +221,4 @@ load_from = None
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/round2/voc_split_r2_s76/'
+work_dir='./out/oln_box/round2/animal_cropzoomx_r2_s78_s85'

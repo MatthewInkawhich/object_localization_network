@@ -16,7 +16,7 @@ def parse_args():
         description='Generate pseudolabels')
     parser.add_argument('source', help='source annotation path')
     parser.add_argument('preds', help='preds annotation path')
-    parser.add_argument('--score-thr', type=float, default=0.55, help='score threshold to use')
+    parser.add_argument('--score-thr', type=float, default=0.75, help='score threshold to use')
     args = parser.parse_args()
     return args
 
@@ -69,10 +69,15 @@ def gt_overlap_exists(p, img2ann_map, iou_thr=0.7):
 def main():
     # Parse args
     args = parse_args()
-    curr_round = int(args.preds.split('preds_round')[-1].split('.bbox.json')[0]) + 1
+    next_round = int(args.preds.split('/')[-1].split('_round')[-1].split('.bbox.json')[0]) + 1
     str_score_thr = "{:.2f}".format(args.score_thr).split('.')[-1]
-    new_filepath = os.path.join(args.preds.split('preds_round')[0], f'annotations_for_round{curr_round}_s{str_score_thr}.json')
+    if "robustpreds" in args.preds.split('/')[-1]:
+        jitter = args.preds.split('/')[-1].split('robustpreds')[-1].split('_round')[0]
+        new_filepath = os.path.join(args.preds.split('/robustpreds')[0], f'robust{jitter}_annotations_for_round{next_round}_s{str_score_thr}.json')
+    else:
+        new_filepath = os.path.join(args.preds.split('/preds_round')[0], f'annotations_for_round{next_round}_s{str_score_thr}.json')
     print("new_filepath:", new_filepath)
+
     # Read source and preds files
     with open(args.source, 'r') as f:
         source_contents = json.load(f)

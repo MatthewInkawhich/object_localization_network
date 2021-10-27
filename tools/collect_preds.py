@@ -63,8 +63,6 @@ def parse_args():
 def main():
     args = parse_args()
     assert args.score_thr >= 0 and args.score_thr <= 1, "score_thr needs to be in range [0,1]"
-    print("args.score_thr:", args.score_thr)
-    print("args.round:", args.round)
 
     cfg = Config.fromfile(args.config)
     if args.cfg_options is not None:
@@ -113,12 +111,17 @@ def main():
         distributed = True
         init_dist(args.launcher, **cfg.dist_params)
 
+    rank, _ = get_dist_info()
+
     # Build the dataloader
     # Remember, we want to run a "test" on the training data
     cfg.data.test.ann_file = cfg.data.test.ann_file.replace("val2017", "train2017")
     cfg.data.test.img_prefix = cfg.data.test.img_prefix.replace("val2017", "train2017")
     dataset = build_dataset(cfg.data.test)
-    print("dataset:", len(dataset))
+    if rank == 0:
+        print("args.score_thr:", args.score_thr)
+        print("args.round:", args.round)
+        print("dataset:", len(dataset))
     data_loader = build_dataloader(
         dataset,
         samples_per_gpu=samples_per_gpu,
@@ -137,7 +140,8 @@ def main():
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)
 
-    print("\nmodel:\n", model)
+    if rank == 0:
+        print("\nmodel:\n", model)
     # old versions did not save class info in checkpoints, this walkaround is
     # for backward compatibility
     if 'CLASSES' in checkpoint['meta']:
@@ -161,7 +165,6 @@ def main():
 
     # Output results to json
     jsonfile_prefix = os.path.join(args.checkpoint.replace(args.checkpoint.split('/')[-1], ""), f"preds_round{args.round}")
-    rank, _ = get_dist_info()
     if rank == 0:
         print("\njsonfile_prefix:", jsonfile_prefix)
         dataset.format_results(outputs, jsonfile_prefix=jsonfile_prefix)
