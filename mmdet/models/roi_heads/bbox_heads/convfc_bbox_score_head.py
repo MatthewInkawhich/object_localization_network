@@ -48,6 +48,11 @@ class ConvFCBBoxScoreHead(ConvFCBBoxHead):
 
         self.loss_bbox_score = build_loss(loss_bbox_score)
         self.bbox_score_type = bbox_score_type
+        # Mink
+        if loss_bbox_score['type'] == 'QualityOnlyFocalLoss':
+            self.qofl = True
+        else:
+            self.qofl = False
 
         self.with_class_score = self.loss_cls.loss_weight > 0.0
         self.with_bbox_loc_score = self.loss_bbox_score.loss_weight > 0.0
@@ -239,12 +244,20 @@ class ConvFCBBoxScoreHead(ConvFCBBoxHead):
 
         if bbox_score is not None:
             if bbox_score.numel() > 0:
-                losses['loss_bbox_score'] = self.loss_bbox_score(
-                    bbox_score.squeeze(-1).sigmoid(),
-                    bbox_score_targets,
-                    bbox_score_weights,
-                    avg_factor=bbox_score_targets.size(0),
-                    reduction_override=reduction_override)
+                if self.qofl:
+                    losses['loss_bbox_score'] = self.loss_bbox_score(
+                        bbox_score.squeeze(-1),  # We apply sigmoid in BCEwithlogits
+                        bbox_score_targets,
+                        bbox_score_weights,
+                        avg_factor=bbox_score_targets.size(0),
+                        reduction_override=reduction_override)
+                else:
+                    losses['loss_bbox_score'] = self.loss_bbox_score(
+                        bbox_score.squeeze(-1).sigmoid(),
+                        bbox_score_targets,
+                        bbox_score_weights,
+                        avg_factor=bbox_score_targets.size(0),
+                        reduction_override=reduction_override)
         return losses
 
     @force_fp32(apply_to=('cls_score', 'bbox_pred'))

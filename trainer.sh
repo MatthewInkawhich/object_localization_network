@@ -31,6 +31,10 @@
 #bash tools/dist_train.sh configs/oln_box/voc5_cropzoomx.py 4
 #bash tools/dist_test_bbox.sh configs/oln_box/voc5_cropzoomx.py out/oln_box/voc5_cropzoomx/latest.pth 4
 
+### TEST
+#CUDA_VISIBLE_DEVICES=1 bash tools/dist_train.sh configs/oln_box/voc_test_focalloss.py 1
+#bash tools/dist_train.sh configs/oln_box/voc_test_focalloss.py 4
+
 
 ### Round2
 #bash tools/dist_train.sh configs/oln_box/round2/aug_cropzoomx_r2_s76.py 4
@@ -66,9 +70,9 @@
 
 ### Round3
 #bash tools/dist_train.sh configs/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s86.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s86.py out/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s86/latest.pth 4
+#bash tools/dist_test_bbox.sh configs/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s86.py out/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s86/latest.pth 4
 #bash tools/dist_train.sh configs/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s85.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s85.py out/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s85/latest.pth 4
+#bash tools/dist_test_bbox.sh configs/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s85.py out/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s85/latest.pth 4
 #bash tools/dist_train.sh configs/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s84.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s84.py out/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s84/latest.pth 4
+#bash tools/dist_test_bbox.sh configs/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s84.py out/oln_box/round3/voc_cropzoomx_ft4_r3_s80_s84_s84/latest.pth 4
 

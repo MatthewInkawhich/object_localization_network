@@ -79,6 +79,7 @@ class ResultVisualizer(object):
                 results[index],
                 dataset.CLASSES,
                 show=self.show,
+                score_thr=0.6,
                 wait_time=self.wait_time,
                 out_file=out_file)
 

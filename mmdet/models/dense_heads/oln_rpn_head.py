@@ -44,6 +44,11 @@ class OlnRPNHead(RPNHead):
         self.objectness_type = objectness_type
         self.with_class_score = self.loss_cls.loss_weight > 0.0
         self.with_objectness_score = self.loss_objectness.loss_weight > 0.0
+        # Mink
+        if loss_objectness['type'] == 'QualityOnlyFocalLoss':
+            self.qofl = True
+        else:
+            self.qofl = False
 
         # Define objectness assigner and sampler
         if self.train_cfg:
@@ -151,11 +156,20 @@ class OlnRPNHead(RPNHead):
             'cls_out_channels must be 1 for objectness learning.')
         objectness_score = objectness_score.permute(0, 2, 3, 1).reshape(-1)
 
-        loss_objectness = self.loss_objectness(
-            objectness_score.sigmoid(), 
-            objectness_targets, 
-            objectness_weights, 
-            avg_factor=num_total_samples)
+        # Mink
+        if self.qofl:        
+            loss_objectness = self.loss_objectness(
+                objectness_score,  # We apply sigmoid in BCEwithlogits 
+                objectness_targets, 
+                objectness_weights, 
+                avg_factor=num_total_samples)
+        else:
+            loss_objectness = self.loss_objectness(
+                objectness_score.sigmoid(), 
+                objectness_targets, 
+                objectness_weights, 
+                avg_factor=num_total_samples)
+
         return loss_cls, loss_bbox, loss_objectness
 
     @force_fp32(apply_to=('cls_scores', 'bbox_preds', 'objectness_scores'))

@@ -128,34 +128,35 @@ def main():
     curr_id = 1000000000
     for i, pred in enumerate(preds_contents):
         # Filter out utter garbage (< 0.7). This isn't necessary, but it speeds up runtime
-        if pred['score'] >= 0.70:
-            # Check if pred has significant overlap with an existing annotation
-            if not gt_overlap_exists(pred, source_img2ann_map):
-                # Make copy
-                pseudo_label = copy.deepcopy(pred)
-                # Round bbox ann to ints
-                #pseudo_label['bbox'] = [round(x) for x in pred['bbox']]
-                # Add annotation id
-                pseudo_label['id'] = curr_id
-                curr_id += 1
-                # Change category
-                pseudo_label['category_id'] = 999999999
-                # Add 'segmentation'
-                pseudo_label['segmentation'] = [xywh2xyxy(pseudo_label['bbox'])]
-                # Add 'area'
-                pseudo_label['area'] = float(pseudo_label['bbox'][2] * pseudo_label['bbox'][3])
-                # Add iscrowd
-                pseudo_label['iscrowd'] = 0
-                #print("\npseudo_label:", pseudo_label)
-                # Append pseudolabel to candidate_pls
-                candidate_pseudolabels.append(pseudo_label)
-                #new_contents['annotations'].append(pseudo_label)
+        #if pred['score'] >= 0.70:
+        # Check if pred has significant overlap with an existing annotation
+        if not gt_overlap_exists(pred, source_img2ann_map):
+            # Make copy
+            pseudo_label = copy.deepcopy(pred)
+            # Round bbox ann to ints
+            #pseudo_label['bbox'] = [round(x) for x in pred['bbox']]
+            # Add annotation id
+            pseudo_label['id'] = curr_id
+            curr_id += 1
+            # Change category
+            pseudo_label['category_id'] = 999999999
+            # Add 'segmentation'
+            pseudo_label['segmentation'] = [xywh2xyxy(pseudo_label['bbox'])]
+            # Add 'area'
+            pseudo_label['area'] = float(pseudo_label['bbox'][2] * pseudo_label['bbox'][3])
+            # Add iscrowd
+            pseudo_label['iscrowd'] = 0
+            #print("\npseudo_label:", pseudo_label)
+            # Append pseudolabel to candidate_pls
+            candidate_pseudolabels.append(pseudo_label)
+            #new_contents['annotations'].append(pseudo_label)
         if i!=0 and i%1000==0:
             print(f"Completed {i}/{len(preds_contents)} candidate pseudolabels")
 
     # Sort candidates by descending confidence score
     candidate_pseudolabels.sort(key=lambda x: x['score'], reverse=True)
    
+    print("len(candidate_pseudolabels):", len(candidate_pseudolabels))
     # Add the top sorted candidate pseudolabels to new_contents['annotations']
     if len(candidate_pseudolabels) <= max_allowed_new_preds:
         new_contents['annotations'].extend(candidate_pseudolabels)

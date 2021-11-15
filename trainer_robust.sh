@@ -1,12 +1,18 @@
 #!/bin/bash
 
 ### Round1
-bash tools/dist_train.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s80.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s80.py out/oln_box/round1/voc_cropzoomx_ft_robust_r1_s80/latest.pth 4
-bash tools/dist_train.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s79.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s79.py out/oln_box/round1/voc_cropzoomx_ft_robust_r1_s79/latest.pth 4
-bash tools/dist_train.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s78.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s78.py out/oln_box/round1/voc_cropzoomx_ft_robust_r1_s78/latest.pth 4
+#bash tools/dist_train.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s80.py 4
+#bash tools/dist_test_bbox.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s80.py out/oln_box/round1/voc_cropzoomx_ft_robust_r1_s80/latest.pth 4
+#bash tools/dist_train.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s79.py 4
+#bash tools/dist_test_bbox.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s79.py out/oln_box/round1/voc_cropzoomx_ft_robust_r1_s79/latest.pth 4
+#bash tools/dist_train.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s78.py 4
+#bash tools/dist_test_bbox.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s78.py out/oln_box/round1/voc_cropzoomx_ft_robust_r1_s78/latest.pth 4
+bash tools/dist_train.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s77.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s77.py out/oln_box/round1/voc_cropzoomx_ft_robust_r1_s77/latest.pth 4
+bash tools/dist_train.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s76.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s76.py out/oln_box/round1/voc_cropzoomx_ft_robust_r1_s76/latest.pth 4
+bash tools/dist_train.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s75.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/round1/voc_cropzoomx_ft_robust_r1_s75.py out/oln_box/round1/voc_cropzoomx_ft_robust_r1_s75/latest.pth 4
 
 ### Round2
 #bash tools/dist_train.sh configs/oln_box/round2/animal_cropzoomx_r2_s78_s86.py 4

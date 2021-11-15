@@ -129,8 +129,15 @@ class L1Loss(nn.Module):
                 Defaults to None.
         """
         assert reduction_override in (None, 'none', 'mean', 'sum')
+
+        #print("\npred:", pred, pred.min(), pred.max(), pred.shape)
+        #print("target:", target, target.min(), target.max(), target.shape)
+
         reduction = (
             reduction_override if reduction_override else self.reduction)
         loss_bbox = self.loss_weight * l1_loss(
             pred, target, weight, reduction=reduction, avg_factor=avg_factor)
+
+        #print("l1 loss:", loss_bbox)
+        #exit()
         return loss_bbox

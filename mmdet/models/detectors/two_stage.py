@@ -155,6 +155,11 @@ class TwoStageDetector(BaseDetector):
                 gt_bboxes_ignore=gt_bboxes_ignore,
                 proposal_cfg=proposal_cfg)
             losses.update(rpn_losses)
+
+            #print("\n\nrpn_losses:")
+            #for k, v in rpn_losses.items():
+            #    print(k, v)
+            #exit()
         else:
             proposal_list = proposals
 
@@ -163,6 +168,12 @@ class TwoStageDetector(BaseDetector):
                                                  gt_bboxes_ignore, gt_masks,
                                                  **kwargs)
         losses.update(roi_losses)
+
+
+        #print("\n\nroi_losses:")
+        #for k, v in roi_losses.items():
+        #    print(k, v)
+        #exit()
 
         return losses
 
