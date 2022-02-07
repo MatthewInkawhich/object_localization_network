@@ -1,0 +1,9 @@
+#!/bin/bash
+
+
+### Round 1
+#bash tools/dist_train.sh configs/oln_box/round1/voc_imagenet_combined_r1_s80.py 4
+#bash tools/dist_test_bbox.sh configs/oln_box/round1/voc_imagenet_combined_r1_s80.py out/oln_box/round1/voc_imagenet_combined_r1_s80/latest.pth 4
+
+bash tools/dist_train.sh configs/oln_box/round1/voc_imagenet_combined_r1_s82.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/round1/voc_imagenet_combined_r1_s82.py out/oln_box/round1/voc_imagenet_combined_r1_s82/latest.pth 4

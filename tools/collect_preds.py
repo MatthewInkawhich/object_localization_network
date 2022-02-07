@@ -26,6 +26,14 @@ def parse_args():
     parser.add_argument('score_thr', type=float, help='score threshold')
     parser.add_argument('round', type=int, help='self-training round')
     parser.add_argument(
+        '--auxiliary',
+        action='store_true',
+        help='Whether to use auxiliary set or training set')
+    parser.add_argument(
+        '--combined',
+        action='store_true',
+        help='Whether to use combined set')
+    parser.add_argument(
         '--fuse-conv-bn',
         action='store_true',
         help='Whether to fuse conv and bn, this will slightly increase'
@@ -63,6 +71,7 @@ def parse_args():
 def main():
     args = parse_args()
     assert args.score_thr >= 0 and args.score_thr <= 1, "score_thr needs to be in range [0,1]"
+    assert not (args.auxiliary and args.combined), "cannot set both auxiliary and combined flags"
 
     cfg = Config.fromfile(args.config)
     if args.cfg_options is not None:
@@ -115,12 +124,22 @@ def main():
 
     # Build the dataloader
     # Remember, we want to run a "test" on the training data
-    cfg.data.test.ann_file = cfg.data.test.ann_file.replace("val2017", "train2017")
-    cfg.data.test.img_prefix = cfg.data.test.img_prefix.replace("val2017", "train2017")
+    if args.auxiliary:
+        cfg.data.test.ann_file = 'data/imagenet/empty_annotations.json'
+        cfg.data.test.img_prefix = 'data/imagenet/images/'
+    elif args.combined:
+        cfg.data.test.ann_file = 'data/coco_imagenet/annotations.json'
+        cfg.data.test.img_prefix = 'data/coco_imagenet/images/'
+    else:
+        cfg.data.test.ann_file = cfg.data.test.ann_file.replace("val2017", "train2017")
+        cfg.data.test.img_prefix = cfg.data.test.img_prefix.replace("val2017", "train2017")
+
     dataset = build_dataset(cfg.data.test)
     if rank == 0:
         print("args.score_thr:", args.score_thr)
         print("args.round:", args.round)
+        print("args.auxiliary:", args.auxiliary)
+        print("args.combined:", args.combined)
         print("dataset:", len(dataset))
     data_loader = build_dataloader(
         dataset,
@@ -128,7 +147,6 @@ def main():
         workers_per_gpu=cfg.data.workers_per_gpu,
         dist=distributed,
         shuffle=False)
-
 
     # build the model and load checkpoint
     cfg.model.train_cfg = None
@@ -161,11 +179,20 @@ def main():
             broadcast_buffers=False)
         outputs = multi_gpu_collect_preds(model, data_loader, args.score_thr, args.tmpdir, args.gpu_collect)
 
-    #print("outputs:", outputs)
+    # tmp
+    #if rank == 0:
+    #    print("outputs:", outputs)
+    #    print("len(outputs):", len(outputs))
+    #exit()
 
     # Output results to json
-    jsonfile_prefix = os.path.join(args.checkpoint.replace(args.checkpoint.split('/')[-1], ""), f"preds_round{args.round}")
     if rank == 0:
+        if args.auxiliary:
+            jsonfile_prefix = os.path.join(args.checkpoint.replace(args.checkpoint.split('/')[-1], ""), f"auxiliary_preds_round{args.round}")
+        elif args.combined:
+            jsonfile_prefix = os.path.join(args.checkpoint.replace(args.checkpoint.split('/')[-1], ""), f"combined_preds_round{args.round}")
+        else:
+            jsonfile_prefix = os.path.join(args.checkpoint.replace(args.checkpoint.split('/')[-1], ""), f"preds_round{args.round}")
         print("\njsonfile_prefix:", jsonfile_prefix)
         dataset.format_results(outputs, jsonfile_prefix=jsonfile_prefix)
 

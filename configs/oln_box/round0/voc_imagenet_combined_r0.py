@@ -1,6 +1,6 @@
 _base_ = [
     '../../_base_/datasets/coco_detection.py',
-    '../../_base_/schedules/schedule_ft4.py', 
+    '../../_base_/schedules/schedule_1x.py', 
     '../../_base_/default_runtime.py'
 ]
 # model settings
@@ -39,12 +39,7 @@ model = dict(
         reg_decoded_bbox=True,
         loss_bbox=dict(type='IoULoss', linear=True, loss_weight=10.0),
         objectness_type='Centerness',
-        #loss_objectness=dict(type='L1Loss', loss_weight=1.0),
-        loss_objectness=dict(
-            type='QualityOnlyFocalLoss',
-            beta=2.0,
-            reduction='mean',
-            loss_weight=1.0),
+        loss_objectness=dict(type='L1Loss', loss_weight=1.0),
         ),
     roi_head=dict(
         type='OlnRoIHead',
@@ -71,12 +66,7 @@ model = dict(
                 ),
             loss_bbox=dict(type='L1Loss', loss_weight=1.0),
             bbox_score_type='BoxIoU',  # 'BoxIoU' or 'Centerness'
-            #loss_bbox_score=dict(type='L1Loss', loss_weight=1.0),
-            loss_bbox_score=dict(
-                type='QualityOnlyFocalLoss',
-                beta=2.0,
-                reduction='mean',
-                loss_weight=1.0),
+            loss_bbox_score=dict(type='L1Loss', loss_weight=1.0),
             )),
     # model training and testing settings
     train_cfg=dict(
@@ -154,7 +144,7 @@ model = dict(
     ))
 
 # Dataset
-dataset_type = 'CocoUSplitDataset'
+dataset_type = 'CocoSplitDataset'
 data_root = 'data/coco/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
@@ -177,6 +167,7 @@ test_pipeline = [
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
+            #dict(type='Resize', keep_ratio=False),
             dict(type='RandomFlip'),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
@@ -188,34 +179,34 @@ data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
-        ann_file='out/oln_box/round2/voc5_cropzoomx_qfl_r2_p30_p40/annotations_for_round3_p48.json',
         is_class_agnostic=True,
-        train_class='voc5',
-        eval_class='nonvoc5',
+        train_class='voc',
+        eval_class='nonvoc',
         type=dataset_type,
         pipeline=train_pipeline,
         ),
     val=dict(
         is_class_agnostic=True,
-        train_class='voc5',
-        eval_class='nonvoc5',
+        train_class='voc',
+        eval_class='nonvoc',
         type=dataset_type,
         pipeline=test_pipeline),
     test=dict(
         is_class_agnostic=True,
-        train_class='voc5',
-        #eval_class='nonvoc5',
-        eval_class='all_nou',
+        train_class='voc',
+        eval_class='nonvoc',
+        #eval_class='voc',
+        #eval_class='all',
         type=dataset_type,
         pipeline=test_pipeline))
 
-#lr_config = dict(
-#    policy='step',
-#    warmup='linear',
-#    warmup_iters=500,
-#    warmup_ratio=0.001,
-#    step=[6, 7])
-#total_epochs = 8
+lr_config = dict(
+    policy='step',
+    warmup='linear',
+    warmup_iters=500,
+    warmup_ratio=0.001,
+    step=[6, 7])
+total_epochs = 8
 
 checkpoint_config = dict(interval=2)
 # yapf:disable
@@ -228,8 +219,8 @@ log_config = dict(
 # yapf:enable
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = 'out/oln_box/round2/voc5_cropzoomx_qfl_r2_p30_p40/latest.pth'
+load_from = None
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/round3/voc5_cropzoomx_qfl_r3_p30_p40_p48'
+work_dir='./out/oln_box/round0/voc_imagenet_combined_r0'

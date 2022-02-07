@@ -1,3 +1,5 @@
+# Modded by MatthewInkawhich
+
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
 
@@ -217,8 +219,47 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
 
         return loss, log_vars
 
+    ### ORIGINAL 
+#    def train_step(self, data, optimizer):
+#        """The iteration step during training.
+#
+#        This method defines an iteration step during training, except for the
+#        back propagation and optimizer updating, which are done in an optimizer
+#        hook. Note that in some complicated cases or models, the whole process
+#        including back propagation and optimizer updating is also defined in
+#        this method, such as GAN.
+#
+#        Args:
+#            data (dict): The output of dataloader.
+#            optimizer (:obj:`torch.optim.Optimizer` | dict): The optimizer of
+#                runner is passed to ``train_step()``. This argument is unused
+#                and reserved.
+#
+#        Returns:
+#            dict: It should contain at least 3 keys: ``loss``, ``log_vars``, \
+#                ``num_samples``.
+#
+#                - ``loss`` is a tensor for back propagation, which can be a \
+#                weighted sum of multiple losses.
+#                - ``log_vars`` contains all the variables to be sent to the
+#                logger.
+#                - ``num_samples`` indicates the batch size (when the model is \
+#                DDP, it means the batch size on each GPU), which is used for \
+#                averaging the logs.
+#        """
+#        losses = self(**data)
+#        loss, log_vars = self._parse_losses(losses)
+#
+#        outputs = dict(
+#            loss=loss, log_vars=log_vars, num_samples=len(data['img_metas']))
+#
+#        return outputs
+
+    ### MODIFIED
     def train_step(self, data, optimizer):
         """The iteration step during training.
+
+        INCLUDES OPTION FOR AUXILIARY DATA
 
         This method defines an iteration step during training, except for the
         back propagation and optimizer updating, which are done in an optimizer
@@ -244,13 +285,55 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
                 DDP, it means the batch size on each GPU), which is used for \
                 averaging the logs.
         """
-        losses = self(**data)
-        loss, log_vars = self._parse_losses(losses)
+        # If data is a list, we know it is [training_data, auxiliary_data]
+        if isinstance(data, list):
+            # Get losses from TRAINING batch
+            #print("\n\n\ndata[0]['img_metas']:", data[0]['img_metas'])
+            losses = self(**data[0])
+            loss, log_vars = self._parse_losses(losses)
+            #print("\nlosses:")
+            #for k, v in losses.items():
+            #    print(k, v)
+            #print("\nloss:", loss)
+            #print("\nlog_vars:", log_vars)
 
-        outputs = dict(
-            loss=loss, log_vars=log_vars, num_samples=len(data['img_metas']))
+            # Get losses from AUXILIARY batch
+            #print("\n\n\ndata[1]['img_metas']:", data[1]['img_metas'])
+            losses_aux = self(**data[1])
+            loss_aux, log_vars_aux = self._parse_losses(losses_aux)
+            #print("\nlosses_aux:")
+            #for k, v in losses_aux.items():
+            #    print(k, v)
+            #print("\nloss_aux:", loss_aux)
+            #print("\nlog_vars_aux:", log_vars_aux)
+
+            # Curate totals
+            total_loss = loss + loss_aux
+            total_log_vars = OrderedDict()
+            for k, v in log_vars.items():
+                if k == 'acc':
+                    total_log_vars[k] = (v + log_vars_aux[k]) / 2
+                else:
+                    total_log_vars[k] = v + log_vars_aux[k]
+            total_num_samples = len(data[0]['img_metas']) + len(data[1]['img_metas'])
+            #print("\n\ntotal_loss:", total_loss)
+            #print("total_log_vars:", total_log_vars)
+            #print("total_num_samples:", total_num_samples)
+            #exit()
+
+            outputs = dict(
+                loss=total_loss, log_vars=total_log_vars, num_samples=total_num_samples)
+
+        # If data is NOT a list, proceed as usual
+        else:
+            losses = self(**data)
+            loss, log_vars = self._parse_losses(losses)
+
+            outputs = dict(
+                loss=loss, log_vars=log_vars, num_samples=len(data['img_metas']))
 
         return outputs
+
 
     def val_step(self, data, optimizer):
         """The iteration step during validation.

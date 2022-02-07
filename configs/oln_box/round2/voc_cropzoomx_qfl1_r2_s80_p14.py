@@ -204,7 +204,9 @@ data = dict(
     test=dict(
         is_class_agnostic=True,
         train_class='voc',
-        eval_class='nonvoc',
+        #eval_class='nonvoc',
+        #eval_class='voc_nou',
+        eval_class='all_nou',
         type=dataset_type,
         pipeline=test_pipeline))
 

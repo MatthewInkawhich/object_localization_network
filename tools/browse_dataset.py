@@ -25,6 +25,7 @@ def parse_args():
         type=str,
         help='If there is no display interface, you can save it')
     parser.add_argument('--not-show', default=False, action='store_true')
+    parser.add_argument('--outlier', default=False, action='store_true')
     parser.add_argument(
         '--show-interval',
         type=float,
@@ -40,19 +41,41 @@ def retrieve_data_cfg(config_path, skip_type):
     train_data_cfg['pipeline'] = [
         x for x in train_data_cfg.pipeline if x['type'] not in skip_type
     ]
+    return cfg
 
+def retrieve_data_cfg_outlier(config_path, skip_type):
+    cfg = Config.fromfile(config_path)
+    train_data_cfg = cfg.data.train
+    outlier_data_cfg = cfg.data.outlier
+    train_data_cfg['pipeline'] = [
+        x for x in train_data_cfg.pipeline if x['type'] not in skip_type
+    ]
+    outlier_data_cfg['pipeline'] = [
+        x for x in outlier_data_cfg.pipeline if x['type'] not in skip_type
+    ]
     return cfg
 
 
 def main():
     args = parse_args()
-    cfg = retrieve_data_cfg(args.config, args.skip_type)
 
-    print("\ncfg.data.train.items():")
-    for k,v in cfg.data.train.items():
-        print(k,v)
 
-    dataset = build_dataset(cfg.data.train)
+    if args.outlier:
+        # OUTLIER
+        cfg = retrieve_data_cfg_outlier(args.config, args.skip_type)
+        print("\ncfg.data.outlier.items():")
+        for k,v in cfg.data.outlier.items():
+            print(k,v)
+        dataset = build_dataset(cfg.data.outlier)
+    else:
+        # TRAIN
+        cfg = retrieve_data_cfg(args.config, args.skip_type)
+        print("\ncfg.data.train.items():")
+        for k,v in cfg.data.train.items():
+            print(k,v)
+        dataset = build_dataset(cfg.data.train)
+
+
 
     progress_bar = mmcv.ProgressBar(len(dataset))
 
@@ -68,7 +91,7 @@ def main():
 
         print("\n\n")
         for k,v in item.items():
-            print(k,v)
+            print("\n",k,v)
             
         #print("filename:", item['filename'])
         #print("img:", item['img'].shape)

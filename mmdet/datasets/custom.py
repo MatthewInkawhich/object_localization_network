@@ -71,6 +71,17 @@ class CustomDataset(Dataset):
         self.filter_empty_gt = filter_empty_gt
         self.CLASSES = self.get_classes(classes)
 
+        #print("ann_file:", ann_file)
+        #print("pipeline:", pipeline)
+        #print("classes:", classes)
+        #print("data_root:", data_root)
+        #print("img_prefix:", img_prefix)
+        #print("seg_prefix:", seg_prefix)
+        #print("proposal_file:", proposal_file)
+        #print("test_mode:", test_mode)
+        #print("filter_empty_gt:", filter_empty_gt)
+        
+
         # join paths if data_root is specified
         if self.data_root is not None:
             if not osp.isabs(self.ann_file):

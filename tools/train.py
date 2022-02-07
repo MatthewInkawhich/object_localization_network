@@ -12,7 +12,7 @@ from mmcv.runner import get_dist_info, init_dist
 from mmcv.utils import get_git_hash
 
 from mmdet import __version__
-from mmdet.apis import set_random_seed, train_detector
+from mmdet.apis import set_random_seed, train_detector, train_detector_w_auxiliary_data
 from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
 from mmdet.utils import collect_env, get_root_logger
@@ -24,6 +24,10 @@ def parse_args():
     parser.add_argument('--work-dir', help='the dir to save logs and models')
     parser.add_argument(
         '--resume-from', help='the checkpoint file to resume from')
+    parser.add_argument(
+        '--auxiliary',
+        action='store_true',
+        help='whether not to train with auxiliary data')
     parser.add_argument(
         '--no-validate',
         action='store_true',
@@ -119,7 +123,7 @@ def main():
         distributed = True
         init_dist(args.launcher, **cfg.dist_params)
         # re-set gpu_ids with distributed training mode
-        _, world_size = get_dist_info()
+        rank, world_size = get_dist_info()
         cfg.gpu_ids = range(world_size)
 
     # create work_dir
@@ -161,6 +165,13 @@ def main():
         test_cfg=cfg.get('test_cfg'))
 
     datasets = [build_dataset(cfg.data.train)]
+    if rank == 0:
+        print("\ndataset:", len(datasets[0]))
+    if args.auxiliary:
+        auxiliary_datasets = [build_dataset(cfg.data.auxiliary)]
+        if rank == 0:
+            print("auxiliary_dataset:", len(auxiliary_datasets[0]))
+
 
     if len(cfg.workflow) == 2:
         val_dataset = copy.deepcopy(cfg.data.val)
@@ -172,16 +183,31 @@ def main():
         cfg.checkpoint_config.meta = dict(
             mmdet_version=__version__ + get_git_hash()[:7],
             CLASSES=datasets[0].CLASSES)
-    # add an attribute for visualization convenience
-    model.CLASSES = datasets[0].CLASSES
-    train_detector(
-        model,
-        datasets,
-        cfg,
-        distributed=distributed,
-        validate=(not args.no_validate),
-        timestamp=timestamp,
-        meta=meta)
+
+    if args.auxiliary:
+        # add an attribute for visualization convenience
+        model.CLASSES = datasets[0].CLASSES
+        train_detector_w_auxiliary_data(
+            model,
+            datasets,
+            auxiliary_datasets,
+            cfg,
+            distributed=distributed,
+            validate=(not args.no_validate),
+            timestamp=timestamp,
+            meta=meta)
+
+    else:
+        # add an attribute for visualization convenience
+        model.CLASSES = datasets[0].CLASSES
+        train_detector(
+            model,
+            datasets,
+            cfg,
+            distributed=distributed,
+            validate=(not args.no_validate),
+            timestamp=timestamp,
+            meta=meta)
 
 
 if __name__ == '__main__':

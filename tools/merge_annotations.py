@@ -71,12 +71,22 @@ def main():
     args = parse_args()
     next_round = int(args.preds.split('/')[-1].split('_round')[-1].split('.bbox.json')[0]) + 1
     str_score_thr = "{:.2f}".format(args.score_thr).split('.')[-1]
+    auxiliary = False
+    combined = False
     if "robustpreds" in args.preds.split('/')[-1]:
         jitter = args.preds.split('/')[-1].split('robustpreds')[-1].split('_round')[0]
         new_filepath = os.path.join(args.preds.split('/robustpreds')[0], f'robust{jitter}_annotations_for_round{next_round}_s{str_score_thr}.json')
+    elif "auxiliary" in args.preds.split('/')[-1]:
+        auxiliary = True
+        new_filepath = os.path.join(args.preds.split('/auxiliary_preds_round')[0], f'auxiliary_annotations_for_round{next_round}_s{str_score_thr}.json')
+    elif "combined" in args.preds.split('/')[-1]:
+        combined = True
+        new_filepath = os.path.join(args.preds.split('/combined_preds_round')[0], f'combined_annotations_for_round{next_round}_s{str_score_thr}.json')
     else:
         new_filepath = os.path.join(args.preds.split('/preds_round')[0], f'annotations_for_round{next_round}_s{str_score_thr}.json')
     print("new_filepath:", new_filepath)
+    print("auxiliary:", auxiliary)
+    print("combined:", combined)
 
     # Read source and preds files
     with open(args.source, 'r') as f:
@@ -118,7 +128,10 @@ def main():
 
     
     # Iterate over preds anns
-    curr_id = 1000000000
+    if auxiliary:
+        curr_id = 2000000000
+    else:
+        curr_id = 1000000000
     for i, pred in enumerate(preds_contents):
         # We only care about preds with score >= score_thr
         if pred['score'] >= args.score_thr:

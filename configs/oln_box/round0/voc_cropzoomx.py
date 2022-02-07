@@ -195,6 +195,8 @@ data = dict(
         is_class_agnostic=True,
         train_class='voc',
         eval_class='nonvoc',
+        #eval_class='voc',
+        #eval_class='all',
         type=dataset_type,
         pipeline=test_pipeline))
 

@@ -188,24 +188,25 @@ data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
-        ann_file='out/oln_box/round2/voc5_cropzoomx_qfl_r2_p30_p40/annotations_for_round3_p48.json',
+        ann_file='out/oln_box/round0/voc_imagenet_r0/annotations_for_round1_s80.json',
         is_class_agnostic=True,
-        train_class='voc5',
-        eval_class='nonvoc5',
+        train_class='voc',
+        eval_class='nonvoc',
         type=dataset_type,
         pipeline=train_pipeline,
         ),
     val=dict(
         is_class_agnostic=True,
-        train_class='voc5',
-        eval_class='nonvoc5',
+        train_class='voc',
+        eval_class='nonvoc',
         type=dataset_type,
         pipeline=test_pipeline),
     test=dict(
         is_class_agnostic=True,
-        train_class='voc5',
-        #eval_class='nonvoc5',
-        eval_class='all_nou',
+        train_class='voc',
+        eval_class='nonvoc',
+        #eval_class='voc_nou',
+        #eval_class='all_nou',
         type=dataset_type,
         pipeline=test_pipeline))
 
@@ -228,8 +229,8 @@ log_config = dict(
 # yapf:enable
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = 'out/oln_box/round2/voc5_cropzoomx_qfl_r2_p30_p40/latest.pth'
+load_from = 'out/oln_box/round0/voc_imagenet_r0/latest.pth'
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/round3/voc5_cropzoomx_qfl_r3_p30_p40_p48'
+work_dir='./out/oln_box/round1/voc_imagenet_r1_s80NA'

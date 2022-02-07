@@ -67,12 +67,31 @@ class CocoUSplitDataset(CocoDataset):
                'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush', 
                'UNKNOWN')
 
+    CLASSES_NOU = ('person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
+               'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
+               'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog',
+               'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe',
+               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
+               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+               'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
+               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
+               'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
+               'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop',
+               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
+               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
+               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
 
     VOC_CLASSES = (
                'airplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
                'cat', 'chair', 'cow', 'dining table', 'dog', 'horse', 
                'motorcycle', 'person', 'potted plant', 'sheep', 'couch',
                'train', 'tv', 'UNKNOWN')
+    VOC_CLASSES_NOU = (
+               'airplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
+               'cat', 'chair', 'cow', 'dining table', 'dog', 'horse', 
+               'motorcycle', 'person', 'potted plant', 'sheep', 'couch',
+               'train', 'tv')
     NONVOC_CLASSES = (
                'truck', 'traffic light', 'fire hydrant',
                'stop sign', 'parking meter', 'bench',
@@ -108,6 +127,8 @@ class CocoUSplitDataset(CocoDataset):
 
     VOC5_CLASSES = (
                'bicycle', 'car', 'chair', 'dog', 'person', 'UNKNOWN')
+    VOC5_CLASSES_NOU = (
+               'bicycle', 'car', 'chair', 'dog', 'person')
     NONVOC5_CLASSES = (
                'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
                'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'horse', 'sheep',
@@ -364,11 +385,14 @@ class CocoUSplitDataset(CocoDataset):
 
     class_names_dict = {
         'all': CLASSES,
+        'all_nou': CLASSES_NOU,
         'voc': VOC_CLASSES,
+        'voc_nou': VOC_CLASSES_NOU,
         'nonvoc': NONVOC_CLASSES,
         'voc10': VOC10_CLASSES,
         'nonvoc10': NONVOC10_CLASSES,
         'voc5': VOC5_CLASSES,
+        'voc5_nou': VOC5_CLASSES_NOU,
         'nonvoc5': NONVOC5_CLASSES,
         'voc2': VOC2_CLASSES,
         'nonvoc2': NONVOC2_CLASSES,
