@@ -151,8 +151,9 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    #dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),
-    dict(type='Resize', img_scale=(800, 1333), keep_ratio=False),
+    dict(type='MinIoURandomCrop', min_ious=(0.1, 0.3, 0.5, 0.7, 0.9), min_crop_size=0.3),  # crop
+    dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),
+    #dict(type='Resize', img_scale=(800, 1333), keep_ratio=False),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),

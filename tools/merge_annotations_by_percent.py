@@ -72,7 +72,11 @@ def main():
     args = parse_args()
 
     next_round = int(args.preds.split('/')[-1].split('_round')[-1].split('.bbox.json')[0]) + 1
-    str_percent_new = "{:.2f}".format(args.percent_new).split('.')[-1]
+    if args.percent_new < 1.0:
+        str_percent_new = "{:.2f}".format(args.percent_new).split('.')[-1]
+    else:
+        str_percent_new = "{:.3f}".format(args.percent_new * .1).split('.')[-1]
+
     if "robustpreds" in args.preds.split('/')[-1]:
         jitter = args.preds.split('/')[-1].split('robustpreds')[-1].split('_round')[0]
         new_filepath = os.path.join(args.preds.split('/robustpreds')[0], f'robust{jitter}_annotations_for_round{next_round}_p{str_percent_new}.json')
@@ -146,7 +150,10 @@ def main():
             pseudo_label['area'] = float(pseudo_label['bbox'][2] * pseudo_label['bbox'][3])
             # Add iscrowd
             pseudo_label['iscrowd'] = 0
-            #print("\npseudo_label:", pseudo_label)
+            #print("\npseudo_label:")
+            #for k, v in pseudo_label.items():
+            #    print(k, v)
+            #exit()
             # Append pseudolabel to candidate_pls
             candidate_pseudolabels.append(pseudo_label)
             #new_contents['annotations'].append(pseudo_label)
@@ -180,8 +187,6 @@ def main():
 
             
     
-
-
 
 
 

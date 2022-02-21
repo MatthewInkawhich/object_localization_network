@@ -163,6 +163,11 @@ class TwoStageDetector(BaseDetector):
         else:
             proposal_list = proposals
 
+        #print("proposal_list:", proposal_list)
+        #for p in proposal_list:
+        #    print(p.shape)
+        #exit()
+
         roi_losses = self.roi_head.forward_train(x, img_metas, proposal_list,
                                                  gt_bboxes, gt_labels,
                                                  gt_bboxes_ignore, gt_masks,

@@ -70,7 +70,8 @@ class DistributedGroupSampler(Sampler):
                  dataset,
                  samples_per_gpu=1,
                  num_replicas=None,
-                 rank=None):
+                 rank=None,
+                 mixup=False):
         _rank, _num_replicas = get_dist_info()
         if num_replicas is None:
             num_replicas = _num_replicas
@@ -80,6 +81,7 @@ class DistributedGroupSampler(Sampler):
         self.samples_per_gpu = samples_per_gpu
         self.num_replicas = num_replicas
         self.rank = rank
+        self.mixup = mixup
         self.epoch = 0
 
         assert hasattr(self.dataset, 'flag')
@@ -96,7 +98,12 @@ class DistributedGroupSampler(Sampler):
     def __iter__(self):
         # deterministically shuffle based on epoch
         g = torch.Generator()
-        g.manual_seed(self.epoch)
+        if self.mixup:
+            # Add a constant to the seed to prevent same sampling as training data
+            #print("\n MIXUP DETECTED... Using different sampling seed\n")
+            g.manual_seed(self.epoch+1000)
+        else:
+            g.manual_seed(self.epoch)
 
         indices = []
         for i, size in enumerate(self.group_sizes):

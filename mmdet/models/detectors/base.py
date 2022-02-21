@@ -256,7 +256,7 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
 #        return outputs
 
     ### MODIFIED
-    def train_step(self, data, optimizer):
+    def train_step(self, data, optimizer, mode='normal'):
         """The iteration step during training.
 
         INCLUDES OPTION FOR AUXILIARY DATA
@@ -272,6 +272,7 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
             optimizer (:obj:`torch.optim.Optimizer` | dict): The optimizer of
                 runner is passed to ``train_step()``. This argument is unused
                 and reserved.
+            mode (str): Training mode (normal, auxiliary, or mixup)
 
         Returns:
             dict: It should contain at least 3 keys: ``loss``, ``log_vars``, \
@@ -285,8 +286,156 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
                 DDP, it means the batch size on each GPU), which is used for \
                 averaging the logs.
         """
-        # If data is a list, we know it is [training_data, auxiliary_data]
-        if isinstance(data, list):
+        #print("\n\n\nIn base.train_step...")
+        #print("data:")
+        #for k, v in data.items():
+        #    print("\n", k, v)
+        #exit()
+
+
+
+        if mode == 'mixup':
+            mixup_ratio = 0.5
+            training_data = data[0]
+            mixup_data = data[1]
+            #print("\n\n\nHERE!!!\n\n\n")
+            #print("\n\n\ndata:")
+            #for k, v in training_data.items():
+            #    print(k, v)
+            #    if k == "img":
+            #        print(v.shape)
+            #print("\n\n\nmixup_data:")
+            #for k, v in mixup_data.items():
+            #    print(k, v)
+            #    if k == "img":
+            #        print(v.shape)
+
+            # Perform checks
+            good_2_mix = True
+            # Only perform mix if batch sizes match exactly (maybe they'd be 
+            # different at the end of the epoch?)
+            if len(training_data['img_metas']) != len(mixup_data['img_metas']):
+                good_2_mix = False
+            # Make sure images are different
+            for batch_idx in range(len(training_data['img_metas'])):
+                # Only mix if images are different
+                if training_data['img_metas'][batch_idx]['filename'] == mixup_data['img_metas'][batch_idx]['filename']:
+                    good_2_mix = False
+                    break
+
+            if not good_2_mix:
+                new_data = training_data
+            else:
+                # Copy over img_metas from training images
+                new_data = {'img_metas': training_data['img_metas']}
+                # Mix images
+                new_data['img'] = mixup_ratio * training_data['img'] + (1 - mixup_ratio) * mixup_data['img']
+                # GT bboxes and labels
+                new_gt_bboxes = []
+                new_gt_labels = []
+                for batch_idx in range(len(training_data['gt_bboxes'])):
+                    new_gt_bboxes.append(torch.cat((training_data['gt_bboxes'][batch_idx], mixup_data['gt_bboxes'][batch_idx])))
+                    new_gt_labels.append(torch.cat((training_data['gt_labels'][batch_idx], mixup_data['gt_labels'][batch_idx])))
+                new_data['gt_bboxes'] = new_gt_bboxes
+                new_data['gt_labels'] = new_gt_labels
+
+            #print("\n\n\nnew_data:")
+            #for k, v in new_data.items():
+            #    print(k, v)
+            #    if k == "img":
+            #        print(v.shape)
+            #exit()
+
+            losses = self(**new_data)
+            loss, log_vars = self._parse_losses(losses)
+
+            outputs = dict(
+                loss=loss, log_vars=log_vars, num_samples=len(new_data['img_metas']))
+
+
+#            ### Need this version as the scale_factors for the 2 images can be different,
+#            mixup_ratio = 0.5
+#            training_data = data[0]
+#            mixup_data = data[1]
+#            #print("\n\n\nHERE!!!\n\n\n")
+#            #print("\n\n\ndata:")
+#            #for k, v in training_data.items():
+#            #    print(k, v)
+#            #    if k == "img":
+#            #        print(v.shape)
+#            #print("\n\n\nmixup_data:")
+#            #for k, v in mixup_data.items():
+#            #    print(k, v)
+#            #    if k == "img":
+#            #        print(v.shape)
+#
+#            ### Perform checks
+#            good_2_mix = True
+#            # Only perform mix if batch sizes match exactly (maybe they'd be 
+#            # different at the end of the epoch?)
+#            if len(training_data['img_metas']) != len(mixup_data['img_metas']):
+#                good_2_mix = False
+#            # Make sure images are different
+#            for batch_idx in range(len(training_data['img_metas'])):
+#                # Only mix if images are different
+#                if training_data['img_metas'][batch_idx]['filename'] == mixup_data['img_metas'][batch_idx]['filename']:
+#                    good_2_mix = False
+#                    break
+#
+#            if good_2_mix:
+#                # Mix img
+#                mixed_img = mixup_ratio * training_data['img'] + (1 - mixup_ratio) * mixup_data['img']
+#                # Prepare and forward mixed training_data
+#                training_data['img'] = mixed_img
+#                losses = self(**training_data)
+#                loss, log_vars = self._parse_losses(losses)
+#        
+#                # Only prepare and forward mixed mixup_data if ANY/ALL mixup_data has gt_labels to learn from
+#                #forward_mixed_mixup = any([len(mixup_data['gt_labels'][batch_idx]) > 0 for batch_idx in range(len(mixup_data['gt_labels']))])
+#                forward_mixed_mixup = all([len(mixup_data['gt_labels'][batch_idx]) > 0 for batch_idx in range(len(mixup_data['gt_labels']))])
+#                print("forward_mixed_mixup:", forward_mixed_mixup)
+#
+#                if forward_mixed_mixup:
+#                    #print("Batch qualifies for forwarding mixed mixup!")
+#                    # Prepare and forward mixed mixup_data
+#                    mixup_data['img'] = mixed_img
+#                    mixup_losses = self(**mixup_data)
+#                    mixup_loss, mixup_log_vars = self._parse_losses(mixup_losses)
+#                    #print("mixup_loss:", mixup_loss)
+#                    #print("mixup_log_vars:", mixup_log_vars)
+#                    # Curate totals
+#                    total_loss = loss + mixup_loss
+#                    total_log_vars = OrderedDict()
+#                    for k, v in log_vars.items():
+#                        if k == 'acc':
+#                            total_log_vars[k] = (v + mixup_log_vars[k]) / 2
+#                        else:
+#                            total_log_vars[k] = v + mixup_log_vars[k]
+#                    total_num_samples = len(training_data['img_metas']) + len(mixup_data['img_metas'])
+#                    #print("\n\ntotal_loss:", total_loss)
+#                    #print("total_log_vars:", total_log_vars)
+#                    #print("total_num_samples:", total_num_samples)
+#                    #exit()
+#                    outputs = dict(
+#                        loss=total_loss, log_vars=total_log_vars, num_samples=total_num_samples)
+#
+#                else:
+#                    #print("Batch does NOT qualify for forwarding mixed mixup...")
+#                    # Just package outputs from mixed training_data pass
+#                    outputs = dict(
+#                        loss=loss, log_vars=log_vars, num_samples=len(training_data['img_metas']))
+#
+#
+#            else:
+#                # Not mixing, so just forward training_data
+#                losses = self(**training_data)
+#                loss, log_vars = self._parse_losses(losses)
+#                outputs = dict(
+#                    loss=loss, log_vars=log_vars, num_samples=len(training_data['img_metas']))
+
+
+
+        elif mode == "auxiliary":
             # Get losses from TRAINING batch
             #print("\n\n\ndata[0]['img_metas']:", data[0]['img_metas'])
             losses = self(**data[0])
@@ -324,7 +473,6 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
             outputs = dict(
                 loss=total_loss, log_vars=total_log_vars, num_samples=total_num_samples)
 
-        # If data is NOT a list, proceed as usual
         else:
             losses = self(**data)
             loss, log_vars = self._parse_losses(losses)

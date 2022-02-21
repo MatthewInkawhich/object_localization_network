@@ -80,6 +80,7 @@ def build_dataloader(dataset,
                      dist=True,
                      shuffle=True,
                      seed=None,
+                     mixup=False,
                      **kwargs):
     """Build PyTorch DataLoader.
 
@@ -107,7 +108,7 @@ def build_dataloader(dataset,
         # that images on each GPU are in the same group
         if shuffle:
             sampler = DistributedGroupSampler(dataset, samples_per_gpu,
-                                              world_size, rank)
+                                              world_size, rank, mixup=mixup)
         else:
             sampler = DistributedSampler(
                 dataset, world_size, rank, shuffle=False)

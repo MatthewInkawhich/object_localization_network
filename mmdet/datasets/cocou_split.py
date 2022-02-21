@@ -424,6 +424,8 @@ class CocoUSplitDataset(CocoDataset):
 
 
     def load_annotations(self, ann_file):
+        #print("hello from load_annotations!")
+        #exit()
         """Load annotation from COCO style annotation file.
 
         Args:
@@ -456,6 +458,14 @@ class CocoUSplitDataset(CocoDataset):
             info = self.coco.load_imgs([i])[0]
             info['filename'] = info['file_name']
             data_infos.append(info)
+
+        # tmp
+        #for i in range(5):
+        #    for k, v in data_infos[i].items():
+        #        print("\n", k, v)
+        #exit()
+
+
         return data_infos
 
     # Refer to custom.py -- filter_img is not used in test_mode.

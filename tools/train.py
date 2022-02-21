@@ -12,7 +12,7 @@ from mmcv.runner import get_dist_info, init_dist
 from mmcv.utils import get_git_hash
 
 from mmdet import __version__
-from mmdet.apis import set_random_seed, train_detector, train_detector_w_auxiliary_data
+from mmdet.apis import set_random_seed, train_detector, train_detector_w_auxiliary_data, train_detector_w_mixup_data
 from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
 from mmdet.utils import collect_env, get_root_logger
@@ -28,6 +28,10 @@ def parse_args():
         '--auxiliary',
         action='store_true',
         help='whether not to train with auxiliary data')
+    parser.add_argument(
+        '--mixup',
+        action='store_true',
+        help='whether not to train with mixup data')
     parser.add_argument(
         '--no-validate',
         action='store_true',
@@ -101,6 +105,7 @@ def main():
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
 
+    assert not (args.auxiliary and args.mixup), "Error: cannot set both auxiliary and mixup"
     # work_dir is determined in this priority: CLI > segment in file > filename
     if args.work_dir is not None:
         # update configs according to CLI args if args.work_dir is not None
@@ -171,6 +176,10 @@ def main():
         auxiliary_datasets = [build_dataset(cfg.data.auxiliary)]
         if rank == 0:
             print("auxiliary_dataset:", len(auxiliary_datasets[0]))
+    if args.mixup:
+        mixup_datasets = [build_dataset(cfg.data.mixup)]
+        if rank == 0:
+            print("mixup_dataset:", len(mixup_datasets[0]))
 
 
     if len(cfg.workflow) == 2:
@@ -191,6 +200,19 @@ def main():
             model,
             datasets,
             auxiliary_datasets,
+            cfg,
+            distributed=distributed,
+            validate=(not args.no_validate),
+            timestamp=timestamp,
+            meta=meta)
+
+    if args.mixup:
+        # add an attribute for visualization convenience
+        model.CLASSES = datasets[0].CLASSES
+        train_detector_w_mixup_data(
+            model,
+            datasets,
+            mixup_datasets,
             cfg,
             distributed=distributed,
             validate=(not args.no_validate),

@@ -34,7 +34,7 @@ class AuxiliaryEpochBasedRunner(BaseRunner):
         #elif train_mode:
         if train_mode:
             outputs = self.model.train_step([data_batch, auxiliary_data_batch], 
-                    self.optimizer, **kwargs)
+                    self.optimizer, mode='auxiliary', **kwargs)
         else:
             outputs = self.model.val_step(data_batch, self.optimizer, **kwargs)
         if not isinstance(outputs, dict):

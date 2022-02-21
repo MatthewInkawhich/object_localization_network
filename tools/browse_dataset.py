@@ -2,6 +2,7 @@ import argparse
 import os
 from pathlib import Path
 
+import torch
 import mmcv
 from mmcv import Config
 
@@ -74,8 +75,12 @@ def main():
         for k,v in cfg.data.train.items():
             print(k,v)
         dataset = build_dataset(cfg.data.train)
+    
 
+    class_names = dataset.CLASSES
 
+    #subset_size = 1000
+    #dataset = torch.utils.data.random_split(dataset, [subset_size, len(dataset)-subset_size])[0]
 
     progress_bar = mmcv.ProgressBar(len(dataset))
 
@@ -89,23 +94,39 @@ def main():
             gt_masks = mask2ndarray(gt_masks)
 
 
+        #print("\n\n")
+        #for k,v in item.items():
+        #    print("\n",k,v)
+        #    if k == 'ori_shape':
+        #        if v[0] > v[1]:
+        #            exit()
+
         print("\n\n")
-        for k,v in item.items():
-            print("\n",k,v)
-            
-        #print("filename:", item['filename'])
-        #print("img:", item['img'].shape)
-        #print("img_shape:", item['img_shape'])
-        #print("gt_bboxes:", item['gt_bboxes'])
-        #print("gt_labels:", item['gt_labels'])
-        #exit()
+        print('ori_shape:', item['ori_shape'])
+        print('img_shape:', item['img_shape'])
+        print('img.shape:', item['img'].shape)
+
+        continue
+
+        #if 'aux_' in item['filename'].split('/')[-1]:
+        #    print("\n\n")
+        #    for k,v in item.items():
+        #        print("\n",k,v)
+                
+            #print("filename:", item['filename'])
+            #print("img:", item['img'].shape)
+            #print("img_shape:", item['img_shape'])
+            #print("gt_bboxes:", item['gt_bboxes'])
+            #print("gt_labels:", item['gt_labels'])
+            #exit()
 
         imshow_det_bboxes(
             item['img'],
             item['gt_bboxes'],
             item['gt_labels'],
             gt_masks,
-            class_names=dataset.CLASSES,
+            #class_names=dataset.CLASSES,
+            class_names=class_names,
             show=not args.not_show,
             wait_time=args.show_interval,
             out_file=filename,

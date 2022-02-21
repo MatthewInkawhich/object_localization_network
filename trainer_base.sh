@@ -1,6 +1,18 @@
 #!/bin/bash
 
+### Faster R-CNN baselines
+#bash tools/dist_train.sh configs/oln_box/baselines/voc_class_agn_faster_rcnn.py 4
+#bash tools/dist_test_bbox.sh configs/oln_box/baselines/voc_class_agn_faster_rcnn.py out/oln_box/baselines/voc_class_agn_faster_rcnn/latest.pth 4
 
-### Round 1
-bash tools/dist_train.sh configs/oln_box/round1/voc_imagenet_r1_s80NA.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/voc_imagenet_r1_s80NA.py out/oln_box/round1/voc_imagenet_r1_s80NA/latest.pth 4
+
+### Faster R-CNN baselines
+#bash tools/dist_train.sh configs/oln_box/baselines/voc_class_agn_faster_rcnn_2x.py 4
+#bash tools/dist_test_bbox.sh configs/oln_box/baselines/voc_class_agn_faster_rcnn_2x.py out/oln_box/baselines/voc_class_agn_faster_rcnn_2x/latest.pth 4
+
+### Faster R-CNN baselines
+#bash tools/dist_train.sh configs/oln_box/baselines/voc5_class_agn_faster_rcnn_2x.py 4
+#bash tools/dist_test_bbox.sh configs/oln_box/baselines/voc5_class_agn_faster_rcnn_2x.py out/oln_box/baselines/voc5_class_agn_faster_rcnn_2x/latest.pth 4
+
+### Faster R-CNN baselines
+bash tools/dist_train.sh configs/oln_box/baselines/vehicle_class_agn_faster_rcnn_2x.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/baselines/vehicle_class_agn_faster_rcnn_2x.py out/oln_box/baselines/vehicle_class_agn_faster_rcnn_2x/latest.pth 4
