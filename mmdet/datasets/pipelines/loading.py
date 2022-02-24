@@ -217,12 +217,14 @@ class LoadAnnotations(object):
                  with_label=True,
                  with_mask=False,
                  with_seg=False,
+                 with_score=False, # New from Mink (for wbbl)
                  poly2mask=True,
                  file_client_args=dict(backend='disk')):
         self.with_bbox = with_bbox
         self.with_label = with_label
         self.with_mask = with_mask
         self.with_seg = with_seg
+        self.with_score = with_score
         self.poly2mask = poly2mask
         self.file_client_args = file_client_args.copy()
         self.file_client = None
@@ -258,6 +260,19 @@ class LoadAnnotations(object):
         """
 
         results['gt_labels'] = results['ann_info']['labels'].copy()
+        return results
+
+    def _load_scores(self, results):
+        """Private function to load score annotations.
+
+        Args:
+            results (dict): Result dict from :obj:`mmdet.CustomDataset`.
+
+        Returns:
+            dict: The dict contains loaded score annotations.
+        """
+
+        results['gt_scores'] = results['ann_info']['scores'].copy()
         return results
 
     def _poly2mask(self, mask_ann, img_h, img_w):
@@ -360,17 +375,23 @@ class LoadAnnotations(object):
             dict: The dict contains loaded bounding box, label, mask and
                 semantic segmentation annotations.
         """
-
         if self.with_bbox:
             results = self._load_bboxes(results)
             if results is None:
                 return None
         if self.with_label:
             results = self._load_labels(results)
+        if self.with_score:
+            results = self._load_scores(results)
         if self.with_mask:
             results = self._load_masks(results)
         if self.with_seg:
             results = self._load_semantic_seg(results)
+
+        #print("\n\nresults:")
+        #for k, v in results.items():
+        #    print("\n", k, v)
+
         return results
 
     def __repr__(self):
@@ -379,6 +400,7 @@ class LoadAnnotations(object):
         repr_str += f'with_label={self.with_label}, '
         repr_str += f'with_mask={self.with_mask}, '
         repr_str += f'with_seg={self.with_seg}, '
+        repr_str += f'with_score={self.with_score}, '
         repr_str += f'poly2mask={self.poly2mask}, '
         repr_str += f'poly2mask={self.file_client_args})'
         return repr_str

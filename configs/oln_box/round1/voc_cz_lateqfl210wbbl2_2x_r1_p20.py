@@ -44,7 +44,7 @@ model = dict(
             type='QualityOnlyFocalLoss',
             beta=2.0,
             reduction='mean',
-            loss_weight=1.0),
+            loss_weight=2.0),
         ),
     roi_head=dict(
         type='OlnRoIHead',
@@ -76,7 +76,7 @@ model = dict(
                 type='QualityOnlyFocalLoss',
                 beta=2.0,
                 reduction='mean',
-                loss_weight=1.0),
+                loss_weight=10.0),
             )),
     # model training and testing settings
     train_cfg=dict(
@@ -109,6 +109,7 @@ model = dict(
                 add_gt_as_proposals=False),
             allowed_border=0,
             pos_weight=-1,
+            score_beta=2,  # New
             debug=False),
         rpn_proposal=dict(
             nms_across_levels=False,
@@ -132,6 +133,7 @@ model = dict(
                 neg_pos_ub=-1,
                 add_gt_as_proposals=True),
             pos_weight=-1,
+            score_beta=2, # New
             debug=False)),
     test_cfg=dict(
         rpn=dict(
@@ -225,4 +227,4 @@ load_from = 'out/oln_box/round0/voc_cz_2x_r0/latest.pth'
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/round1/voc_cz_lateqflwbbl_2x_r1_p20'
+work_dir='./out/oln_box/round1/voc_cz_lateqfl210wbbl2_2x_r1_p20'

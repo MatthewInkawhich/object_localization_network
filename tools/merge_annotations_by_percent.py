@@ -96,14 +96,16 @@ def main():
     # Initialize new_contents
     new_contents = copy.deepcopy(source_contents)
     
-    """
-    Add new UNKNOWN category
-    """
+    # Add new UNKNOWN category
     new_contents['categories'].append({
         'supercategory': 'UNKNOWN',
         'id': 999999999,
         'name': 'UNKNOWN',
     })
+
+    # Add score item to each existing annotation
+    for i in range(len(new_contents['annotations'])):
+        new_contents['annotations'][i]['score'] = 1.0
 
     for c in new_contents['categories']:
         print(c)
@@ -157,7 +159,7 @@ def main():
             # Append pseudolabel to candidate_pls
             candidate_pseudolabels.append(pseudo_label)
             #new_contents['annotations'].append(pseudo_label)
-        if i!=0 and i%1000==0:
+        if i!=0 and i%10000==0:
             print(f"Completed {i}/{len(preds_contents)} candidate pseudolabels")
 
     # Sort candidates by descending confidence score

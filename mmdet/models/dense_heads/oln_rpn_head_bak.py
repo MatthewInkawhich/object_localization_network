@@ -181,7 +181,6 @@ class OlnRPNHead(RPNHead):
              # gt_labels,  # gt_labels is not used since we sample the GTs.
              img_metas,
              gt_bboxes_ignore=None,
-             gt_scores=None,
              gt_labels=None):  # gt_labels is not used since we sample the GTs.
         """Compute losses of the head.
 
@@ -195,7 +194,6 @@ class OlnRPNHead(RPNHead):
             gt_bboxes (list[Tensor]): Ground truth bboxes for each image with
                 shape (num_gts, 4) in [tl_x, tl_y, br_x, br_y] format.
             gt_labels (list[Tensor]): class indices corresponding to each box
-            gt_scores (list[Tensor]): label confidence scores corresponding to each box
             img_metas (list[dict]): Meta information of each image, e.g.,
                 image size, scaling factor, etc.
             gt_bboxes_ignore (None | list[Tensor]): specify which bounding
@@ -220,7 +218,6 @@ class OlnRPNHead(RPNHead):
             img_metas,
             gt_bboxes_ignore_list=gt_bboxes_ignore,
             gt_labels_list=gt_labels,
-            gt_scores_list=gt_scores,
             label_channels=label_channels)
         if cls_reg_objectness_targets is None:
             return None
@@ -265,7 +262,6 @@ class OlnRPNHead(RPNHead):
                             gt_bboxes,
                             gt_bboxes_ignore,
                             gt_labels,
-                            gt_scores,
                             img_meta,
                             label_channels=1,
                             unmap_outputs=True):
@@ -299,18 +295,6 @@ class OlnRPNHead(RPNHead):
                 num_total_pos (int): Number of positive samples in all images
                 num_total_neg (int): Number of negative samples in all images
         """
-#        print("\n\n\n ARGS:")
-#        print("\n flat_anchors:", flat_anchors, flat_anchors.shape)
-#        print("\n valid_flags:", valid_flags, valid_flags.shape)
-#        print("\n gt_bboxes:", gt_bboxes, gt_bboxes.shape)
-#        print("\n gt_bboxes_ignore:", gt_bboxes_ignore)
-#        print("\n gt_labels:", gt_labels)
-#        print("\n gt_scores:", gt_scores)
-#        print("\n img_meta:", img_meta)
-#        print("\n label_channels:", label_channels)
-#        print("\n unmap_outputs:", unmap_outputs)
-
-
         inside_flags = anchor_inside_flags(flat_anchors, valid_flags,
                                            img_meta['img_shape'][:2],
                                            self.train_cfg.allowed_border)
@@ -352,32 +336,7 @@ class OlnRPNHead(RPNHead):
             valid_targets = torch.min(pos_bbox_targets,-1)[0] > 0
             bbox_targets[pos_inds[valid_targets], :] = (
                 pos_bbox_targets[valid_targets])
-
-            # New by Mink
-            # If there are gt_scores present, weight bbox loss according to 
-            # the corresponding GT's score
-            #print("\n pos_bbox_targets:", pos_bbox_targets)
-            #print("\n bbox_targets:", bbox_targets, bbox_targets.shape)
-            #print("\n pos_inds:", pos_inds)
-            #print("\n valid_targets:", valid_targets, valid_targets.shape)
-            if gt_scores is None:
-                bbox_weights[pos_inds[valid_targets], :] = 1.0
-            else:
-                assert "score_beta" in self.train_cfg, "Error (OLN-RPN): gt_scores present but no score_beta in rpn_train_cfg"
-                num_gts = sampling_result.num_gts
-                pos_assigned_gt_inds = sampling_result.pos_assigned_gt_inds
-                #print("num_gts:", num_gts)
-                #print("pos_assigned_gt_inds:", pos_assigned_gt_inds)
-                for gt_idx in range(num_gts):
-                    all_conditions = torch.logical_and(valid_targets, (pos_assigned_gt_inds==gt_idx))
-                    bbox_weights[pos_inds[all_conditions], :] = gt_scores[gt_idx] ** self.train_cfg.score_beta
-
-            #print("\n bbox_weights:", bbox_weights, bbox_weights.shape)
-            #print("bbox_weights indexes of 1.0:")
-            #for i in range(bbox_weights.shape[0]):
-            #    if bbox_weights[i][0] > 0:
-            #        print("found: ", i, bbox_weights[i])
-            #exit()
+            bbox_weights[pos_inds[valid_targets], :] = 1.0
 
             if gt_labels is None:
                 # Only rpn gives gt_labels as None
@@ -464,7 +423,6 @@ class OlnRPNHead(RPNHead):
                     img_metas,
                     gt_bboxes_ignore_list=None,
                     gt_labels_list=None,
-                    gt_scores_list=None,
                     label_channels=1,
                     unmap_outputs=True,
                     return_sampling_results=False):
@@ -524,8 +482,6 @@ class OlnRPNHead(RPNHead):
             gt_bboxes_ignore_list = [None for _ in range(num_imgs)]
         if gt_labels_list is None:
             gt_labels_list = [None for _ in range(num_imgs)]
-        if gt_scores_list is None:
-            gt_scores_list = [None for _ in range(num_imgs)]
         results = multi_apply(
             self._get_targets_single,
             concat_anchor_list,
@@ -533,7 +489,6 @@ class OlnRPNHead(RPNHead):
             gt_bboxes_list,
             gt_bboxes_ignore_list,
             gt_labels_list,
-            gt_scores_list,
             img_metas,
             label_channels=label_channels,
             unmap_outputs=unmap_outputs)

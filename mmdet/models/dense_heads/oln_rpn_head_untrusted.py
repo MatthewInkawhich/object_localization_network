@@ -130,6 +130,10 @@ class OlnRPNHead(RPNHead):
         label_weights = label_weights.reshape(-1)
         cls_score = cls_score.permute(0, 2, 3,
                                       1).reshape(-1, self.cls_out_channels)
+
+        print("\n\n\nlabels:", labels, labels.shape, labels.sum())
+        print("\nlabel_weights:", label_weights, label_weights.shape, label_weights.sum())
+
         loss_cls = self.loss_cls(
             cls_score, labels, label_weights, avg_factor=num_total_samples)
         # regression loss
@@ -143,6 +147,11 @@ class OlnRPNHead(RPNHead):
             # decodes the already encoded coordinates to absolute format.
             anchors = anchors.reshape(-1, 4)
             bbox_pred = self.bbox_coder.decode(anchors, bbox_pred)
+
+        print("\n\n\nbbox_pred:", bbox_pred, bbox_pred.shape)
+        print("\nbbox_targets:", bbox_targets, bbox_targets.shape, bbox_targets.sum())
+        print("\nbbox_weights:", bbox_weights, bbox_weights.shape, bbox_weights.sum())
+
         loss_bbox = self.loss_bbox(
             bbox_pred,
             bbox_targets,
@@ -228,6 +237,9 @@ class OlnRPNHead(RPNHead):
          num_total_pos, num_total_neg, objectness_targets_list,
          objectness_weights_list) = cls_reg_objectness_targets
 
+        print("get_targets complete!")
+        exit()
+
         num_total_samples = (
             num_total_pos + num_total_neg if self.sampling else num_total_pos)
 
@@ -239,6 +251,26 @@ class OlnRPNHead(RPNHead):
             concat_anchor_list.append(torch.cat(anchor_list[i]))
         all_anchor_list = images_to_levels(concat_anchor_list,
                                            num_level_anchors)
+
+        print("\n\n\ncls_scores:", cls_scores, len(cls_scores))
+        print("\nbbox_preds:", bbox_preds, len(bbox_preds))
+        print("\nobjectness_scores:", objectness_scores, len(objectness_scores))
+        print("\ngt_bboxes:", gt_bboxes, len(gt_bboxes))
+        print("\ngt_labels:", gt_labels)
+        print("\ngt_scores:", gt_scores)
+
+
+        print("\n\nlabels_list:", labels_list, len(labels_list))
+        print("\nlabel_weights_list:", label_weights_list, len(label_weights_list))
+        print("\nbbox_targets_list:", bbox_targets_list, len(bbox_targets_list))
+        print("\nbbox_weights_list:", bbox_weights_list, len(bbox_weights_list))
+        print("\nnum_total_pos:", num_total_pos)
+        print("\nnum_total_neg:", num_total_neg)
+        print("\nobjectness_targets_list:", objectness_targets_list, len(objectness_targets_list))
+        print("\nobjectness_weights_list:", objectness_weights_list, len(objectness_weights_list))
+        print("\nnum_level_anchors:", num_level_anchors, len(num_level_anchors))
+        exit()
+        
 
         losses_cls, losses_bbox, losses_objectness = multi_apply(
             self.loss_single,
@@ -280,7 +312,6 @@ class OlnRPNHead(RPNHead):
                     shape (num_anchors,).
             gt_bboxes (Tensor): Ground truth bboxes of the image,
                 shape (num_gts, 4).
-            img_meta (dict): Meta info of the image.
             gt_bboxes_ignore (Tensor): Ground truth bboxes to be
                 ignored, shape (num_ignored_gts, 4).
             img_meta (dict): Meta info of the image.
@@ -299,16 +330,17 @@ class OlnRPNHead(RPNHead):
                 num_total_pos (int): Number of positive samples in all images
                 num_total_neg (int): Number of negative samples in all images
         """
-#        print("\n\n\n ARGS:")
-#        print("\n flat_anchors:", flat_anchors, flat_anchors.shape)
-#        print("\n valid_flags:", valid_flags, valid_flags.shape)
-#        print("\n gt_bboxes:", gt_bboxes, gt_bboxes.shape)
-#        print("\n gt_bboxes_ignore:", gt_bboxes_ignore)
-#        print("\n gt_labels:", gt_labels)
-#        print("\n gt_scores:", gt_scores)
-#        print("\n img_meta:", img_meta)
-#        print("\n label_channels:", label_channels)
-#        print("\n unmap_outputs:", unmap_outputs)
+        print("\n\n\n ARGS:")
+        print("\n flat_anchors:", flat_anchors, flat_anchors.shape)
+        print("\n valid_flags:", valid_flags, valid_flags.shape)
+        print("\n gt_bboxes:", gt_bboxes, gt_bboxes.shape)
+        print("\n gt_bboxes_ignore:", gt_bboxes_ignore)
+        print("\n gt_labels:", gt_labels)
+        print("\n gt_scores:", gt_scores)
+        print("\n img_meta:", img_meta)
+        print("\n label_channels:", label_channels)
+        print("\n unmap_outputs:", unmap_outputs)
+
 
 
         inside_flags = anchor_inside_flags(flat_anchors, valid_flags,
@@ -322,8 +354,10 @@ class OlnRPNHead(RPNHead):
         assign_result = self.assigner.assign(
             anchors, gt_bboxes, gt_bboxes_ignore,
             None if self.sampling else gt_labels)
+        print("\n assign_result:", assign_result)
         sampling_result = self.sampler.sample(assign_result, anchors,
                                               gt_bboxes)
+        print("\n sampling_result:", sampling_result)
 
         # Assign objectness gt and sample anchors
         objectness_assign_result = self.objectness_assigner.assign(
@@ -353,31 +387,33 @@ class OlnRPNHead(RPNHead):
             bbox_targets[pos_inds[valid_targets], :] = (
                 pos_bbox_targets[valid_targets])
 
+            print("\n pos_bbox_targets:", pos_bbox_targets)
+            print("\n bbox_targets:", bbox_targets, bbox_targets.shape)
             # New by Mink
-            # If there are gt_scores present, weight bbox loss according to 
-            # the corresponding GT's score
-            #print("\n pos_bbox_targets:", pos_bbox_targets)
-            #print("\n bbox_targets:", bbox_targets, bbox_targets.shape)
-            #print("\n pos_inds:", pos_inds)
-            #print("\n valid_targets:", valid_targets, valid_targets.shape)
             if gt_scores is None:
                 bbox_weights[pos_inds[valid_targets], :] = 1.0
             else:
-                assert "score_beta" in self.train_cfg, "Error (OLN-RPN): gt_scores present but no score_beta in rpn_train_cfg"
+                print("\n pos_inds:", pos_inds)
+                print("\n valid_targets:", valid_targets, valid_targets.shape)
                 num_gts = sampling_result.num_gts
                 pos_assigned_gt_inds = sampling_result.pos_assigned_gt_inds
-                #print("num_gts:", num_gts)
-                #print("pos_assigned_gt_inds:", pos_assigned_gt_inds)
-                for gt_idx in range(num_gts):
-                    all_conditions = torch.logical_and(valid_targets, (pos_assigned_gt_inds==gt_idx))
-                    bbox_weights[pos_inds[all_conditions], :] = gt_scores[gt_idx] ** self.train_cfg.score_beta
 
-            #print("\n bbox_weights:", bbox_weights, bbox_weights.shape)
-            #print("bbox_weights indexes of 1.0:")
-            #for i in range(bbox_weights.shape[0]):
-            #    if bbox_weights[i][0] > 0:
-            #        print("found: ", i, bbox_weights[i])
-            #exit()
+                # tmp!!!
+                gt_scores[0] = .76
+
+                for gt_idx in range(num_gts):
+                    print("\n gt_idx:", gt_idx)
+                    all_conditions = torch.logical_and(valid_targets, (pos_assigned_gt_inds==gt_idx))
+                    bbox_weights[pos_inds[all_conditions], :] = gt_scores[gt_idx]
+
+
+            print("\n bbox_weights:", bbox_weights, bbox_weights.shape)
+            print("bbox_weights indexes of 1.0:")
+            for i in range(bbox_weights.shape[0]):
+                if bbox_weights[i][0] > 0:
+                    print("found: ", i, bbox_weights[i])
+
+            exit()
 
             if gt_labels is None:
                 # Only rpn gives gt_labels as None
@@ -524,8 +560,6 @@ class OlnRPNHead(RPNHead):
             gt_bboxes_ignore_list = [None for _ in range(num_imgs)]
         if gt_labels_list is None:
             gt_labels_list = [None for _ in range(num_imgs)]
-        if gt_scores_list is None:
-            gt_scores_list = [None for _ in range(num_imgs)]
         results = multi_apply(
             self._get_targets_single,
             concat_anchor_list,

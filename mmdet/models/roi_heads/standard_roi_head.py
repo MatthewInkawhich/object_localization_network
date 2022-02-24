@@ -73,6 +73,7 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
                       proposal_list,
                       gt_bboxes,
                       gt_labels,
+                      gt_scores=None,
                       gt_bboxes_ignore=None,
                       gt_masks=None):
         """
@@ -117,7 +118,7 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
         # bbox head forward and loss
         if self.with_bbox:
             bbox_results = self._bbox_forward_train(x, sampling_results,
-                                                    gt_bboxes, gt_labels,
+                                                    gt_bboxes, gt_labels, gt_scores,
                                                     img_metas)
             losses.update(bbox_results['loss_bbox'])
 

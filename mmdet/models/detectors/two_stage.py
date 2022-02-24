@@ -109,6 +109,7 @@ class TwoStageDetector(BaseDetector):
                       gt_labels,
                       gt_bboxes_ignore=None,
                       gt_masks=None,
+                      gt_scores=None,
                       proposals=None,
                       **kwargs):
         """
@@ -152,13 +153,14 @@ class TwoStageDetector(BaseDetector):
                 img_metas,
                 gt_bboxes,
                 gt_labels=None,
+                gt_scores=gt_scores,  # Mink
                 gt_bboxes_ignore=gt_bboxes_ignore,
                 proposal_cfg=proposal_cfg)
             losses.update(rpn_losses)
 
             #print("\n\nrpn_losses:")
             #for k, v in rpn_losses.items():
-            #    print(k, v)
+            #    print("\n", k, v)
             #exit()
         else:
             proposal_list = proposals
@@ -169,15 +171,15 @@ class TwoStageDetector(BaseDetector):
         #exit()
 
         roi_losses = self.roi_head.forward_train(x, img_metas, proposal_list,
-                                                 gt_bboxes, gt_labels,
+                                                 gt_bboxes, gt_labels, gt_scores,
                                                  gt_bboxes_ignore, gt_masks,
-                                                 **kwargs)
+                                                 **kwargs) # New
         losses.update(roi_losses)
 
 
         #print("\n\nroi_losses:")
         #for k, v in roi_losses.items():
-        #    print(k, v)
+        #    print("\n", k, v)
         #exit()
 
         return losses

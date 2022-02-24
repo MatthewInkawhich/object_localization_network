@@ -1050,6 +1050,10 @@ class MinIoURandomCrop(object):
             'gt_bboxes': 'gt_labels',
             'gt_bboxes_ignore': 'gt_labels_ignore'
         }
+        self.bbox2score = {
+            'gt_bboxes': 'gt_scores',
+            'gt_bboxes_ignore': 'gt_scores_ignore'
+        }
         self.bbox2mask = {
             'gt_bboxes': 'gt_masks',
             'gt_bboxes_ignore': 'gt_masks_ignore'
@@ -1133,6 +1137,10 @@ class MinIoURandomCrop(object):
                         label_key = self.bbox2label.get(key)
                         if label_key in results:
                             results[label_key] = results[label_key][mask]
+                        # scores
+                        score_key = self.bbox2score.get(key)
+                        if score_key in results:
+                            results[score_key] = results[score_key][mask]
 
                         # mask fields
                         mask_key = self.bbox2mask.get(key)

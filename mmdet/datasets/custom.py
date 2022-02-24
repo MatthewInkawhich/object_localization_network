@@ -114,6 +114,8 @@ class CustomDataset(Dataset):
         # processing pipeline
         self.pipeline = Compose(pipeline)
 
+
+
     def __len__(self):
         """Total number of samples of data."""
         return len(self.data_infos)
@@ -220,10 +222,18 @@ class CustomDataset(Dataset):
 
         img_info = self.data_infos[idx]
         ann_info = self.get_ann_info(idx)
+
+        # tmp
+        #print("\nidx:", idx)
+        #print("\nimg_info:", img_info)
+        #print("\nann_info:", ann_info)
+        #exit()
+
         results = dict(img_info=img_info, ann_info=ann_info)
         if self.proposals is not None:
             results['proposals'] = self.proposals[idx]
         self.pre_pipeline(results)
+        #print("before pipeline!")
         return self.pipeline(results)
 
     def prepare_test_img(self, idx):

@@ -90,7 +90,7 @@ class ConvFCBBoxScoreHead(ConvFCBBoxHead):
         return cls_score, bbox_pred, bbox_score
 
     def _get_target_single(self, pos_bboxes, neg_bboxes, pos_gt_bboxes,
-                           pos_gt_labels, gt_scores, sampling_result, cfg):
+                           pos_gt_labels, cfg):
         num_pos = pos_bboxes.size(0)
         num_neg = neg_bboxes.size(0)
         num_samples = num_pos + num_neg
@@ -122,29 +122,7 @@ class ConvFCBBoxScoreHead(ConvFCBBoxHead):
                 # absolute coordinate format.
                 pos_bbox_targets = pos_gt_bboxes
             bbox_targets[:num_pos, :] = pos_bbox_targets
-
-            # New by Mink
-            # If there are gt_scores present, weight bbox loss according to 
-            # the corresponding GT's score
-            #print("\n\nCurr sampling_result:", sampling_result)
-            #print("\n num_pos:", num_pos)
-            if gt_scores is None:
-                bbox_weights[:num_pos, :] = 1
-            else:
-                assert "score_beta" in cfg, "Error (OLN-ROI): gt_scores present but no score_beta in rcnn_train_cfg"
-                #print("\n gt_scores:", gt_scores)
-                num_gts = sampling_result.num_gts
-                pos_assigned_gt_inds = sampling_result.pos_assigned_gt_inds
-                pos_bbox_weights = pos_bboxes.new_zeros(num_pos, 4)
-                for gt_idx in range(num_gts):
-                    pos_bbox_weights[(pos_assigned_gt_inds == gt_idx), :] = gt_scores[gt_idx] ** cfg.score_beta
-                #print("\n pos_bbox_weights:", pos_bbox_weights, pos_bbox_weights.shape)
-                bbox_weights[:num_pos, :] = pos_bbox_weights
-
-            #print("\n bbox_weights:", bbox_weights.shape)
-            #for i in range(bbox_weights.shape[0]):
-            #    print(i, bbox_weights[i])
-            #exit()
+            bbox_weights[:num_pos, :] = 1
             
             # Bbox-IoU as target
             if self.bbox_score_type == 'BoxIoU':
@@ -183,17 +161,13 @@ class ConvFCBBoxScoreHead(ConvFCBBoxHead):
                     sampling_results,
                     gt_bboxes,
                     gt_labels,
-                    gt_scores, # New
                     rcnn_train_cfg,
                     concat=True,
                     class_agnostic=False):
-
         pos_bboxes_list = [res.pos_bboxes for res in sampling_results]
         neg_bboxes_list = [res.neg_bboxes for res in sampling_results]
         pos_gt_bboxes_list = [res.pos_gt_bboxes for res in sampling_results]
         pos_gt_labels_list = [res.pos_gt_labels for res in sampling_results]
-        if gt_scores is None:
-            gt_scores = [None for _ in range(len(sampling_results))]
         (labels, label_weights, bbox_targets, bbox_weights, 
          bbox_score_targets, bbox_score_weights) = multi_apply(
             self._get_target_single,
@@ -201,8 +175,6 @@ class ConvFCBBoxScoreHead(ConvFCBBoxHead):
             neg_bboxes_list,
             pos_gt_bboxes_list,
             pos_gt_labels_list,
-            gt_scores,
-            sampling_results,
             cfg=rcnn_train_cfg)
 
         if concat:

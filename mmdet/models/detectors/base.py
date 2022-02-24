@@ -292,8 +292,6 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
         #    print("\n", k, v)
         #exit()
 
-
-
         if mode == 'mixup':
             mixup_ratio = 0.5
             training_data = data[0]
@@ -480,6 +478,11 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
             outputs = dict(
                 loss=loss, log_vars=log_vars, num_samples=len(data['img_metas']))
 
+            #print("\n\n losses:")
+            #for k, v in losses.items():
+            #    print("\n", k, v)
+            #exit()
+        
         return outputs
 
 

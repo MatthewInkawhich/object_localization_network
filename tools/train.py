@@ -168,6 +168,8 @@ def main():
         cfg.model,
         train_cfg=cfg.get('train_cfg'),
         test_cfg=cfg.get('test_cfg'))
+    if rank == 0:
+        print("\n\nmodel:", model)
 
     datasets = [build_dataset(cfg.data.train)]
     if rank == 0:

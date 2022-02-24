@@ -106,7 +106,6 @@ def main():
         print('img_shape:', item['img_shape'])
         print('img.shape:', item['img'].shape)
 
-        continue
 
         #if 'aux_' in item['filename'].split('/')[-1]:
         #    print("\n\n")

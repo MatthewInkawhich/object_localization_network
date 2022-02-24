@@ -39,12 +39,7 @@ model = dict(
         reg_decoded_bbox=True,
         loss_bbox=dict(type='IoULoss', linear=True, loss_weight=10.0),
         objectness_type='Centerness',
-        #loss_objectness=dict(type='L1Loss', loss_weight=1.0),
-        loss_objectness=dict(
-            type='QualityOnlyFocalLoss',
-            beta=2.0,
-            reduction='mean',
-            loss_weight=1.0),
+        loss_objectness=dict(type='L1Loss', loss_weight=1.0),
         ),
     roi_head=dict(
         type='OlnRoIHead',
@@ -71,12 +66,7 @@ model = dict(
                 ),
             loss_bbox=dict(type='L1Loss', loss_weight=1.0),
             bbox_score_type='BoxIoU',  # 'BoxIoU' or 'Centerness'
-            #loss_bbox_score=dict(type='L1Loss', loss_weight=1.0),
-            loss_bbox_score=dict(
-                type='QualityOnlyFocalLoss',
-                beta=2.0,
-                reduction='mean',
-                loss_weight=1.0),
+            loss_bbox_score=dict(type='L1Loss', loss_weight=1.0),
             )),
     # model training and testing settings
     train_cfg=dict(
@@ -160,16 +150,14 @@ img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
-    #dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='LoadAnnotations', with_bbox=True, with_score=True),
+    dict(type='LoadAnnotations', with_bbox=True),
     dict(type='MinIoURandomCrop', min_ious=(0.1, 0.3, 0.5, 0.7, 0.9), min_crop_size=0.3),  # crop
     dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),  # zoom
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    #dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_scores']),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -188,9 +176,9 @@ test_pipeline = [
 ]
 data = dict(
     samples_per_gpu=2,
-    workers_per_gpu=1,
+    workers_per_gpu=2,
     train=dict(
-        ann_file='out/oln_box/round0/voc_cz_2x_r0/annotations_for_round1_p20.json',
+        ann_file='out/oln_box/round0/voc_cz_2x_r0/annotations_for_round1_p30.json',
         is_class_agnostic=True,
         train_class='voc',
         eval_class='nonvoc',
@@ -225,4 +213,4 @@ load_from = 'out/oln_box/round0/voc_cz_2x_r0/latest.pth'
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/round1/voc_cz_lateqflwbbl_2x_r1_p20'
+work_dir='./out/oln_box/round1/voc_cz_2x_r1_p30'

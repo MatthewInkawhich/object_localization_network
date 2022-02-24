@@ -510,6 +510,7 @@ class CocoUSplitDataset(CocoDataset):
         gt_labels = []
         gt_bboxes_ignore = []
         gt_masks_ann = []
+        gt_scores = []  # New by Mink (for weighted bbox loss)
         for i, ann in enumerate(ann_info):
             if ann.get('ignore', False):
                 continue
@@ -529,10 +530,14 @@ class CocoUSplitDataset(CocoDataset):
                 gt_bboxes.append(bbox)                
                 gt_labels.append(self.cat2label[ann['category_id']])
                 gt_masks_ann.append(ann.get('segmentation', None))
+                if 'score' in ann:
+                    gt_scores.append(ann['score'])
+
 
         if gt_bboxes:
             gt_bboxes = np.array(gt_bboxes, dtype=np.float32)
             gt_labels = np.array(gt_labels, dtype=np.int64)
+            gt_scores = np.array(gt_scores, dtype=np.float32) # New by Mink (for wbbl)
         else:
             gt_bboxes = np.zeros((0, 4), dtype=np.float32)
             gt_labels = np.array([], dtype=np.int64)
@@ -544,14 +549,24 @@ class CocoUSplitDataset(CocoDataset):
 
         seg_map = img_info['filename'].replace('jpg', 'png')
 
-        ann = dict(
-            bboxes=gt_bboxes,
-            labels=gt_labels,
-            bboxes_ignore=gt_bboxes_ignore,
-            masks=gt_masks_ann,
-            seg_map=seg_map)
+        if len(gt_scores) > 0:
+            ann = dict(
+                bboxes=gt_bboxes,
+                labels=gt_labels,
+                bboxes_ignore=gt_bboxes_ignore,
+                masks=gt_masks_ann,
+                seg_map=seg_map,
+                scores=gt_scores,)
+        else:
+            ann = dict(
+                bboxes=gt_bboxes,
+                labels=gt_labels,
+                bboxes_ignore=gt_bboxes_ignore,
+                masks=gt_masks_ann,
+                seg_map=seg_map,)
 
         return ann
+
 
     def evaluate(self,
                  results,
