@@ -1,6 +1,6 @@
 _base_ = [
     '../../_base_/datasets/coco_detection.py',
-    '../../_base_/schedules/schedule_ft4.py', 
+    '../../_base_/schedules/schedule_1x.py', 
     '../../_base_/default_runtime.py'
 ]
 # model settings
@@ -39,12 +39,7 @@ model = dict(
         reg_decoded_bbox=True,
         loss_bbox=dict(type='IoULoss', linear=True, loss_weight=10.0),
         objectness_type='Centerness',
-        #loss_objectness=dict(type='L1Loss', loss_weight=1.0),
-        loss_objectness=dict(
-            type='QualityOnlyFocalLoss',
-            beta=2.0,
-            reduction='mean',
-            loss_weight=1.0),
+        loss_objectness=dict(type='L1Loss', loss_weight=1.0),
         ),
     roi_head=dict(
         type='OlnRoIHead',
@@ -71,12 +66,7 @@ model = dict(
                 ),
             loss_bbox=dict(type='L1Loss', loss_weight=1.0),
             bbox_score_type='BoxIoU',  # 'BoxIoU' or 'Centerness'
-            #loss_bbox_score=dict(type='L1Loss', loss_weight=1.0),
-            loss_bbox_score=dict(
-                type='QualityOnlyFocalLoss',
-                beta=2.0,
-                reduction='mean',
-                loss_weight=1.0),
+            loss_bbox_score=dict(type='L1Loss', loss_weight=1.0),
             )),
     # model training and testing settings
     train_cfg=dict(
@@ -109,7 +99,6 @@ model = dict(
                 add_gt_as_proposals=False),
             allowed_border=0,
             pos_weight=-1,
-            score_beta=2,  # New
             debug=False),
         rpn_proposal=dict(
             nms_across_levels=False,
@@ -133,7 +122,6 @@ model = dict(
                 neg_pos_ub=-1,
                 add_gt_as_proposals=True),
             pos_weight=-1,
-            score_beta=2, # New
             debug=False)),
     test_cfg=dict(
         rpn=dict(
@@ -156,22 +144,20 @@ model = dict(
     ))
 
 # Dataset
-dataset_type = 'CocoUSplitDataset'
+dataset_type = 'CocoSplitDataset'
 data_root = 'data/coco/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
-    #dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='LoadAnnotations', with_bbox=True, with_score=True),
+    dict(type='LoadAnnotations', with_bbox=True),
     dict(type='MinIoURandomCrop', min_ious=(0.1, 0.3, 0.5, 0.7, 0.9), min_crop_size=0.3),  # crop
     dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),  # zoom
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    #dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_scores']),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -192,25 +178,32 @@ data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
-        ann_file='out/oln_box/round0/voc_cz_2x_r0/annotations_for_round1_p30.json',
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='animal',
+        eval_class='nonanimal',
         type=dataset_type,
         pipeline=train_pipeline,
         ),
     val=dict(
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='animal',
+        eval_class='nonanimal',
         type=dataset_type,
         pipeline=test_pipeline),
     test=dict(
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='animal',
+        eval_class='nonanimal',
         type=dataset_type,
         pipeline=test_pipeline))
+
+lr_config = dict(
+    policy='step',
+    warmup='linear',
+    warmup_iters=500,
+    warmup_ratio=0.001,
+    step=[12, 14])
+total_epochs = 16
 
 checkpoint_config = dict(interval=2)
 # yapf:disable
@@ -223,8 +216,8 @@ log_config = dict(
 # yapf:enable
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = 'out/oln_box/round0/voc_cz_2x_r0/latest.pth'
+load_from = None
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/round1/voc_cz_lateqflwbbl2_2x_r1_p30'
+work_dir='./out/oln_box/round0/animal_cz_2x_r0'

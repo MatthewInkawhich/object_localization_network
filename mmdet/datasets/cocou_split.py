@@ -541,6 +541,7 @@ class CocoUSplitDataset(CocoDataset):
         else:
             gt_bboxes = np.zeros((0, 4), dtype=np.float32)
             gt_labels = np.array([], dtype=np.int64)
+            gt_scores = np.array([], dtype=np.float32)
 
         if gt_bboxes_ignore:
             gt_bboxes_ignore = np.array(gt_bboxes_ignore, dtype=np.float32)
@@ -549,21 +550,30 @@ class CocoUSplitDataset(CocoDataset):
 
         seg_map = img_info['filename'].replace('jpg', 'png')
 
-        if len(gt_scores) > 0:
-            ann = dict(
-                bboxes=gt_bboxes,
-                labels=gt_labels,
-                bboxes_ignore=gt_bboxes_ignore,
-                masks=gt_masks_ann,
-                seg_map=seg_map,
-                scores=gt_scores,)
-        else:
-            ann = dict(
-                bboxes=gt_bboxes,
-                labels=gt_labels,
-                bboxes_ignore=gt_bboxes_ignore,
-                masks=gt_masks_ann,
-                seg_map=seg_map,)
+
+        #if img_info['id'] == 545566:
+        #    print("img_info:", img_info)
+        #    print("ann_info:", ann_info)
+        #    print("\n\ngt_bboxes:", gt_bboxes)
+        #    print("gt_labels:", gt_labels)
+        #    print("gt_scores:", gt_scores)
+
+
+        #if len(gt_scores) > 0:
+        ann = dict(
+            bboxes=gt_bboxes,
+            labels=gt_labels,
+            bboxes_ignore=gt_bboxes_ignore,
+            masks=gt_masks_ann,
+            seg_map=seg_map,
+            scores=gt_scores,)
+        #else:
+        #    ann = dict(
+        #        bboxes=gt_bboxes,
+        #        labels=gt_labels,
+        #        bboxes_ignore=gt_bboxes_ignore,
+        #        masks=gt_masks_ann,
+        #        seg_map=seg_map,)
 
         return ann
 

@@ -1,19 +1,22 @@
 #!/bin/bash
 
 
+### Round 1
+bash tools/dist_train.sh configs/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p10.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p10.py out/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p10/latest.pth 4
 
-### Round2
-#bash tools/dist_train.sh configs/oln_box/round2/voc5_cropzoomx_r2_s78_s86.py 4
-#bash tools/dist_test_bbox.sh configs/oln_box/round2/voc5_cropzoomx_r2_s78_s86.py out/oln_box/round2/voc5_cropzoomx_r2_s78_s86/latest.pth 4
-#bash tools/dist_train.sh configs/oln_box/round2/voc5_cropzoomx_r2_s78_s84.py 4
-#bash tools/dist_test_bbox.sh configs/oln_box/round2/voc5_cropzoomx_r2_s78_s84.py out/oln_box/round2/voc5_cropzoomx_r2_s78_s84/latest.pth 4
-#bash tools/dist_train.sh configs/oln_box/round2/voc5_cropzoomx_r2_s78_s82.py 4
-#bash tools/dist_test_bbox.sh configs/oln_box/round2/voc5_cropzoomx_r2_s78_s82.py out/oln_box/round2/voc5_cropzoomx_r2_s78_s82/latest.pth 4
+bash tools/dist_train.sh configs/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p20.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p20.py out/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p20/latest.pth 4
 
-### Round3
-bash tools/dist_train.sh configs/oln_box/round3/voc5_cropzoomx_r3_s78_s84_s88.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round3/voc5_cropzoomx_r3_s78_s84_s88.py out/oln_box/round3/voc5_cropzoomx_r3_s78_s84_s88/latest.pth 4
-bash tools/dist_train.sh configs/oln_box/round3/voc5_cropzoomx_r3_s78_s84_s87.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round3/voc5_cropzoomx_r3_s78_s84_s87.py out/oln_box/round3/voc5_cropzoomx_r3_s78_s84_s87/latest.pth 4
-bash tools/dist_train.sh configs/oln_box/round3/voc5_cropzoomx_r3_s78_s84_s86.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round3/voc5_cropzoomx_r3_s78_s84_s86.py out/oln_box/round3/voc5_cropzoomx_r3_s78_s84_s86/latest.pth 4
+bash tools/dist_train.sh configs/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p30.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p30.py out/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p30/latest.pth 4
+
+bash tools/dist_train.sh configs/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p40.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p40.py out/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p40/latest.pth 4
+
+bash tools/dist_train.sh configs/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p50.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p50.py out/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p50/latest.pth 4
+
+bash tools/dist_train.sh configs/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p60.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p60.py out/oln_box/round1/voc5_cz_lateqflwbbl2_2x_r1_p60/latest.pth 4
+

@@ -272,6 +272,11 @@ class LoadAnnotations(object):
             dict: The dict contains loaded score annotations.
         """
 
+        #if 'scores' not in results['ann_info']:
+        #    print("Error: scores key not present, setting to []...")
+        #    for k, v in results.items():
+        #        print("\n", k, v)
+
         results['gt_scores'] = results['ann_info']['scores'].copy()
         return results
 

@@ -190,7 +190,7 @@ test_pipeline = [
 ]
 data = dict(
     samples_per_gpu=2,
-    workers_per_gpu=1,
+    workers_per_gpu=2,
     train=dict(
         ann_file='out/oln_box/round0/voc_cz_2x_r0/annotations_for_round1_p10.json',
         is_class_agnostic=True,
