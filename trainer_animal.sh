@@ -2,32 +2,28 @@
 
 
 ### Round 1
-bash tools/dist_train.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p10.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p10.py out/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p10/latest.pth 4
+#bash tools/dist_collect_preds.sh configs/oln_box/round0/animal_cz_2x_r0.py out/oln_box/round0/animal_cz_2x_r0/latest.pth 0.6 0 4
+#python tools/merge_annotations_by_percent.py data/coco/annotations/instances_train2017.json out/oln_box/round0/animal_cz_2x_r0/preds_round0.bbox.json 62566 .30
 
-bash tools/dist_train.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p20.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p20.py out/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p20/latest.pth 4
+#bash tools/dist_train.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_noft_2x_r1_p30.py 4
+#bash tools/dist_test_bbox.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_noft_2x_r1_p30.py out/oln_box/round1/animal_cz_lateqflwbbl2_noft_2x_r1_p30/latest.pth 4
+#echo "DONE ROUND1"
 
-bash tools/dist_train.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p30.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p30.py out/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p30/latest.pth 4
 
-bash tools/dist_train.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p40.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p40.py out/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p40/latest.pth 4
+### Round 2
+#bash tools/dist_collect_preds.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_noft_2x_r1_p30.py out/oln_box/round1/animal_cz_lateqflwbbl2_noft_2x_r1_p30/latest.pth 0.6 1 4
+#python tools/merge_annotations_by_percent.py data/coco/annotations/instances_train2017.json out/oln_box/round1/animal_cz_lateqflwbbl2_noft_2x_r1_p30/preds_round1.bbox.json 62566 .30
 
-bash tools/dist_train.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p50.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p50.py out/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p50/latest.pth 4
+bash tools/dist_train.sh configs/oln_box/round2/animal_cz_lateqflwbbl2_noft_2x_r2_p30_p30.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/round2/animal_cz_lateqflwbbl2_noft_2x_r2_p30_p30.py out/oln_box/round2/animal_cz_lateqflwbbl2_noft_2x_r2_p30_p30/latest.pth 4
+echo "DONE ROUND2"
 
-bash tools/dist_train.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p60.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p60.py out/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p60/latest.pth 4
 
-bash tools/dist_train.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p70.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p70.py out/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p70/latest.pth 4
+### Round 3
+bash tools/dist_collect_preds.sh configs/oln_box/round2/animal_cz_lateqflwbbl2_noft_2x_r2_p30_p30.py out/oln_box/round2/animal_cz_lateqflwbbl2_noft_2x_r2_p30_p30/latest.pth 0.6 2 4
+python tools/merge_annotations_by_percent.py data/coco/annotations/instances_train2017.json out/oln_box/round2/animal_cz_lateqflwbbl2_noft_2x_r2_p30_p30/preds_round2.bbox.json 62566 .30
 
-bash tools/dist_train.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p80.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p80.py out/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p80/latest.pth 4
+bash tools/dist_train.sh configs/oln_box/round3/animal_cz_lateqflwbbl2_noft_2x_r3_p30_p30_p30.py 4
+bash tools/dist_test_bbox.sh configs/oln_box/round3/animal_cz_lateqflwbbl2_noft_2x_r3_p30_p30_p30.py out/oln_box/round3/animal_cz_lateqflwbbl2_noft_2x_r3_p30_p30_p30/latest.pth 4
+echo "DONE ROUND3"
 
-bash tools/dist_train.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p90.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p90.py out/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p90/latest.pth 4
-
-bash tools/dist_train.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p100.py 4
-bash tools/dist_test_bbox.sh configs/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p100.py out/oln_box/round1/animal_cz_lateqflwbbl2_2x_r1_p100/latest.pth 4

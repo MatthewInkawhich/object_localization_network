@@ -117,9 +117,14 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
         losses = dict()
         # bbox head forward and loss
         if self.with_bbox:
-            bbox_results = self._bbox_forward_train(x, sampling_results,
-                                                    gt_bboxes, gt_labels, gt_scores,
-                                                    img_metas)
+            if gt_scores is None:
+                bbox_results = self._bbox_forward_train(x, sampling_results,
+                                                        gt_bboxes, gt_labels,
+                                                        img_metas)
+            else:
+                bbox_results = self._bbox_forward_train(x, sampling_results,
+                                                        gt_bboxes, gt_labels,
+                                                        img_metas, gt_scores=gt_scores)
             losses.update(bbox_results['loss_bbox'])
 
         # mask head forward and loss

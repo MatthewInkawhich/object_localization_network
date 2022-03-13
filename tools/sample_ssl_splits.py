@@ -50,7 +50,7 @@ def main():
     # File/Directory names
     coco_annotation_file = 'data/coco/annotations/instances_train2017.json'
     new_annotation_dir = os.path.join('data', 'coco', 'ssl_annotations')
-    new_annotation_file = os.path.join(new_annotation_dir, 'ssl_annotations_p{}_s{}.json'.format(str_percentage, args.seed))
+    new_annotation_file = os.path.join(new_annotation_dir, 'ssl_p{}_s{}_annotations.json'.format(str_percentage, args.seed))
 
     print("new_annotation_dir:", new_annotation_dir)
     print("new_annotation_file:", new_annotation_file)
