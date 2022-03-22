@@ -220,6 +220,9 @@ class CocoUSplitDataset(CocoDataset):
     ANIMAL_CLASSES = (
                'bird', 'cat', 'dog',
                'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'UNKNOWN')
+    ANIMAL_CLASSES_NOU = (
+               'bird', 'cat', 'dog',
+               'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe')
     NON_ANIMAL_CLASSES = (
                'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
                'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
@@ -403,6 +406,7 @@ class CocoUSplitDataset(CocoDataset):
         'outdoor': OUTDOOR_CLASSES,
         'nonoutdoor': NON_OUTDOOR_CLASSES,
         'animal': ANIMAL_CLASSES,
+        'animal_nou': ANIMAL_CLASSES_NOU,
         'nonanimal': NON_ANIMAL_CLASSES,
         'accessory': ACCESSORY_CLASSES,
         'nonaccessory': NON_ACCESSORY_CLASSES,

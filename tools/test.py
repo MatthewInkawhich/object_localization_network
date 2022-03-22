@@ -39,6 +39,7 @@ def parse_args():
         nargs='+',
         help='evaluation metrics, which depends on the dataset, e.g., "bbox",'
         ' "segm", "proposal" for COCO, and "mAP", "recall" for PASCAL VOC')
+    parser.add_argument('--evalclass', type=str, help='replace the cfg.data.test.eval_class with this')
     parser.add_argument('--show', action='store_true', help='show results')
     parser.add_argument(
         '--show-dir', help='directory where painted images will be saved')
@@ -159,6 +160,9 @@ def main():
         init_dist(args.launcher, **cfg.dist_params)
 
     # build the dataloader
+    if args.evalclass:
+        cfg.data.test.eval_class = args.evalclass
+    print("cfg.data.test.eval_class:", cfg.data.test.eval_class)
     dataset = build_dataset(cfg.data.test)
     data_loader = build_dataloader(
         dataset,

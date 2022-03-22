@@ -10,6 +10,41 @@ import os
 import json
 import copy
 
+CLASSES = ('person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
+           'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
+           'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog',
+           'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe',
+           'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+           'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
+           'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+           'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
+           'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
+           'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
+           'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop',
+           'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
+           'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
+           'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+VOC_CLASSES = (
+           'airplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
+           'cat', 'chair', 'cow', 'dining table', 'dog', 'horse', 
+           'motorcycle', 'person', 'potted plant', 'sheep', 'couch',
+           'train', 'tv')
+VOC5_CLASSES = (
+           'bicycle', 'car', 'chair', 'dog', 'person')
+ANIMAL_CLASSES = (
+           'bird', 'cat', 'dog',
+           'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe')
+VEHICLE_CLASSES = (
+           'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
+           'train', 'truck', 'boat')
+
+class_names_dict = {
+    'all': CLASSES,
+    'voc': VOC_CLASSES,
+    'voc5': VOC5_CLASSES,
+    'animal': ANIMAL_CLASSES,
+    'vehicle': VEHICLE_CLASSES,
+}
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -18,6 +53,7 @@ def parse_args():
     parser.add_argument('preds', help='preds annotation path')
     parser.add_argument('original_id_anns', type=int, help='number of original ID annotations')
     parser.add_argument('percent_new', type=float, help='percent increase from new pseudo-labels relative to original_id_anns')
+    parser.add_argument('--restricted', type=str, help='restricted split')
     args = parser.parse_args()
     return args
 
@@ -80,6 +116,8 @@ def main():
     if "robustpreds" in args.preds.split('/')[-1]:
         jitter = args.preds.split('/')[-1].split('robustpreds')[-1].split('_round')[0]
         new_filepath = os.path.join(args.preds.split('/robustpreds')[0], f'robust{jitter}_annotations_for_round{next_round}_p{str_percent_new}.json')
+    elif args.restricted:
+        new_filepath = os.path.join(args.preds.split('/preds_round')[0], f'restricted_{args.restricted}_annotations_for_round{next_round}_p{str_percent_new}.json')
     else:
         new_filepath = os.path.join(args.preds.split('/preds_round')[0], f'annotations_for_round{next_round}_p{str_percent_new}.json')
     print("new_filepath:", new_filepath)
@@ -93,6 +131,8 @@ def main():
     with open(args.preds, 'r') as f:
         preds_contents = json.load(f)
 
+    print("source_contents['images']:", len(source_contents['images']))
+
     # Initialize new_contents
     new_contents = copy.deepcopy(source_contents)
     
@@ -102,6 +142,13 @@ def main():
         'id': 999999999,
         'name': 'UNKNOWN',
     })
+
+    # Create category_id2name_map
+    category_id2name_map = {}
+    category_name2id_map = {}
+    for i in range(len(new_contents['categories'])):
+        category_id2name_map[new_contents['categories'][i]['id']] = new_contents['categories'][i]['name']
+        category_name2id_map[new_contents['categories'][i]['name']] = new_contents['categories'][i]['id']
 
     # Add score item to each existing annotation
     for i in range(len(new_contents['annotations'])):
@@ -113,7 +160,7 @@ def main():
     """
     Add new annotations
     """
-    # Create source source_img2ann_map
+    # Create source_img2ann_map
     source_img2ann_map = {}
     for ann in source_contents['annotations']:
         curr_image_id = ann['image_id']
@@ -126,6 +173,42 @@ def main():
     #    print("\n", k)
     #    for i in range(len(v)):
     #        print(v[i])
+    #exit()
+
+    # If we have an args.restricted argument, filter preds from images
+    # that don't contain an ID instance
+    if args.restricted:
+        restricted_classname_set = class_names_dict[args.restricted]
+        restricted_classid_set = [category_name2id_map[name] for name in restricted_classname_set]
+        print("restricted_classname_set:", restricted_classname_set)
+        print("restricted_classid_set:", restricted_classid_set)
+
+        # Collect list of usable images
+        print("\nCreating restricted_image_set...")
+        restricted_image_set = {}
+        for img_id, ann_list in source_img2ann_map.items():
+            is_valid = False
+            for i in range(len(ann_list)):
+                if ann_list[i]['category_id'] in restricted_classid_set:
+                    is_valid = True
+                    break
+            restricted_image_set[img_id] = is_valid
+        print("Finished restricted_image_set:", len(restricted_image_set))
+
+        # Filter preds_contents
+        print("\nFiltering preds_contents...")
+        filtered_preds_contents = []
+        for i in range(len(preds_contents)):
+            # Need this because some images don't have preds
+            if preds_contents[i]['image_id'] in restricted_image_set: 
+                # If this pred's image_id is in the set, add it to filtered_preds_contents
+                if restricted_image_set[preds_contents[i]['image_id']]:
+                    filtered_preds_contents.append(preds_contents[i])
+
+        print("preds_contents (before):", len(preds_contents))
+        preds_contents = filtered_preds_contents
+        print("preds_contents (after):", len(preds_contents))
+
 
     # Initialize candidate PLs
     candidate_pseudolabels = []

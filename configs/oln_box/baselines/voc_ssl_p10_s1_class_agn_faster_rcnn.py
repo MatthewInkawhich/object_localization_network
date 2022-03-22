@@ -169,9 +169,9 @@ data = dict(
         pipeline=test_pipeline,
         is_class_agnostic=True,
         train_class='voc',
-        eval_class='nonvoc'))
+        #eval_class='nonvoc'))
         #eval_class='voc'))
-        #eval_class='all'))
+        eval_class='all'))
 evaluation = dict(interval=1, metric='bbox')
 
 # Optimization settings
