@@ -1,18 +1,10 @@
 #!/bin/bash
 
-bash tools/dist_test_bbox_evalclass.sh configs/oln_box/baselines/animal_ssl_p10_s1_class_agn_faster_rcnn.py out/oln_box/baselines/animal_ssl_p10_s1_class_agn_faster_rcnn/latest.pth 'animal' 4
-echo "FINISHED ID"
-bash tools/dist_test_bbox_evalclass.sh configs/oln_box/baselines/animal_ssl_p10_s1_class_agn_faster_rcnn.py out/oln_box/baselines/animal_ssl_p10_s1_class_agn_faster_rcnn/latest.pth 'all' 4
-echo "FINISHED ALL"
+bash tools/dist_test_bbox_evalclass.sh configs/oln_box/round0/vehicle_cz_2x_r0.py out/oln_box/round0/vehicle_cz_2x_r0/latest.pth 'vehicle' 4
+bash tools/dist_test_bbox_evalclass.sh configs/oln_box/round0/vehicle_cz_2x_r0.py out/oln_box/round0/vehicle_cz_2x_r0/latest.pth 'all' 4
 
-bash tools/dist_test_bbox_evalclass.sh configs/oln_box/baselines/animal_ssl_p10_s1_oln_2x.py out/oln_box/baselines/animal_ssl_p10_s1_oln_2x/latest.pth 'animal' 4
-echo "FINISHED ID"
-bash tools/dist_test_bbox_evalclass.sh configs/oln_box/baselines/animal_ssl_p10_s1_oln_2x.py out/oln_box/baselines/animal_ssl_p10_s1_oln_2x/latest.pth 'all' 4
-echo "FINISHED ALL"
+bash tools/dist_test_bbox_evalclass.sh configs/oln_box/round1/vehicle_cz_lateqflwbbl2_noft_2x_r1_p30.py out/oln_box/round1/vehicle_cz_lateqflwbbl2_noft_2x_r1_p30/latest.pth 'vehicle_nou' 4
+bash tools/dist_test_bbox_evalclass.sh configs/oln_box/round1/vehicle_cz_lateqflwbbl2_noft_2x_r1_p30.py out/oln_box/round1/vehicle_cz_lateqflwbbl2_noft_2x_r1_p30/latest.pth 'all_nou' 4
 
-bash tools/dist_test_bbox_evalclass.sh configs/oln_box/round0/animal_ssl_p10_s1_cz_2x_r0.py out/oln_box/round0/animal_ssl_p10_s1_cz_2x_r0/latest.pth 'animal' 4
-echo "FINISHED ID"
-bash tools/dist_test_bbox_evalclass.sh configs/oln_box/round0/animal_ssl_p10_s1_cz_2x_r0.py out/oln_box/round0/animal_ssl_p10_s1_cz_2x_r0/latest.pth 'all' 4
-echo "FINISHED ALL"
-
-
+bash tools/dist_test_bbox_evalclass.sh configs/oln_box/round2/vehicle_cz_lateqflwbbl2_noft_2x_r2_p30_p30.py out/oln_box/round2/vehicle_cz_lateqflwbbl2_noft_2x_r2_p30_p30/latest.pth 'vehicle_nou' 4
+bash tools/dist_test_bbox_evalclass.sh configs/oln_box/round2/vehicle_cz_lateqflwbbl2_noft_2x_r2_p30_p30.py out/oln_box/round2/vehicle_cz_lateqflwbbl2_noft_2x_r2_p30_p30/latest.pth 'all_nou' 4

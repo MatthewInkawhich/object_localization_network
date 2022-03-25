@@ -67,6 +67,27 @@ class CocoSplitDataset(CocoDataset):
                'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
 
 
+    HCOCO_CLASSES = (
+               'airplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
+               'cat', 'chair', 'cow', 'dining table', 'dog', 'horse', 
+               'motorcycle', 'person', 'potted plant', 'sheep', 'couch',
+               'train', 'tv', 'traffic light', 'stop sign', 'bench', 'backpack',
+               'handbag', 'skis', 'sports ball', 'skateboard', 'surfboard', 
+               'fork', 'bowl', 'apple', 'pizza', 'toilet', 'laptop', 'remote',
+               'oven', 'sink', 'refrigerator', 'toothbrush')
+    NONHCOCO_CLASSES = (
+               'truck', 'fire hydrant', 'parking meter', 
+               'elephant', 'bear', 'zebra', 'giraffe',
+               'umbrella', 'tie', 'suitcase', 'frisbee',
+               'snowboard', 'kite', 'baseball bat',
+               'baseball glove', 'tennis racket',
+               'wine glass', 'cup', 'knife', 'spoon', 
+               'banana', 'sandwich', 'orange', 'broccoli', 'carrot',
+               'hot dog', 'donut', 'cake', 'bed',
+               'mouse', 'keyboard', 'cell phone', 'microwave',
+               'toaster', 'book', 'clock',
+               'vase', 'scissors', 'teddy bear', 'hair drier')
+
     VOC_CLASSES = (
                'airplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
                'cat', 'chair', 'cow', 'dining table', 'dog', 'horse', 
@@ -363,6 +384,8 @@ class CocoSplitDataset(CocoDataset):
 
     class_names_dict = {
         'all': CLASSES,
+        'hcoco': HCOCO_CLASSES,
+        'nonhcoco': NONHCOCO_CLASSES,
         'voc': VOC_CLASSES,
         'nonvoc': NONVOC_CLASSES,
         'voc10': VOC10_CLASSES,

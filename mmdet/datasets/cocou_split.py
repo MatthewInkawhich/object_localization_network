@@ -82,6 +82,36 @@ class CocoUSplitDataset(CocoDataset):
                'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
                'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
 
+
+    HCOCO_CLASSES = (
+               'airplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
+               'cat', 'chair', 'cow', 'dining table', 'dog', 'horse', 
+               'motorcycle', 'person', 'potted plant', 'sheep', 'couch',
+               'train', 'tv', 'traffic light', 'stop sign', 'bench', 'backpack',
+               'handbag', 'skis', 'sports ball', 'skateboard', 'surfboard', 
+               'fork', 'bowl', 'apple', 'pizza', 'toilet', 'laptop', 'remote',
+               'oven', 'sink', 'refrigerator', 'toothbrush', 'UNKNOWN')
+    HCOCO_CLASSES_NOU = (
+               'airplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
+               'cat', 'chair', 'cow', 'dining table', 'dog', 'horse', 
+               'motorcycle', 'person', 'potted plant', 'sheep', 'couch',
+               'train', 'tv', 'traffic light', 'stop sign', 'bench', 'backpack',
+               'handbag', 'skis', 'sports ball', 'skateboard', 'surfboard', 
+               'fork', 'bowl', 'apple', 'pizza', 'toilet', 'laptop', 'remote',
+               'oven', 'sink', 'refrigerator', 'toothbrush')
+    NONHCOCO_CLASSES = (
+               'truck', 'fire hydrant', 'parking meter', 
+               'elephant', 'bear', 'zebra', 'giraffe',
+               'umbrella', 'tie', 'suitcase', 'frisbee',
+               'snowboard', 'kite', 'baseball bat',
+               'baseball glove', 'tennis racket',
+               'wine glass', 'cup', 'knife', 'spoon', 
+               'banana', 'sandwich', 'orange', 'broccoli', 'carrot',
+               'hot dog', 'donut', 'cake', 'bed',
+               'mouse', 'keyboard', 'cell phone', 'microwave',
+               'toaster', 'book', 'clock',
+               'vase', 'scissors', 'teddy bear', 'hair drier')
+
     VOC_CLASSES = (
                'airplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
                'cat', 'chair', 'cow', 'dining table', 'dog', 'horse', 
@@ -181,6 +211,9 @@ class CocoUSplitDataset(CocoDataset):
     VEHICLE_CLASSES = (
                'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
                'train', 'truck', 'boat', 'UNKNOWN')
+    VEHICLE_CLASSES_NOU = (
+               'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
+               'train', 'truck', 'boat')
     NON_VEHICLE_CLASSES = (
                'person', 'traffic light', 'fire hydrant',
                'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog',
@@ -389,6 +422,9 @@ class CocoUSplitDataset(CocoDataset):
     class_names_dict = {
         'all': CLASSES,
         'all_nou': CLASSES_NOU,
+        'hcoco': HCOCO_CLASSES,
+        'hcoco_nou': HCOCO_CLASSES_NOU,
+        'nonhcoco': NONHCOCO_CLASSES,
         'voc': VOC_CLASSES,
         'voc_nou': VOC_CLASSES_NOU,
         'nonvoc': NONVOC_CLASSES,
@@ -402,6 +438,7 @@ class CocoUSplitDataset(CocoDataset):
         'person': PERSON_CLASSES,
         'nonperson': NON_PERSON_CLASSES,
         'vehicle': VEHICLE_CLASSES,
+        'vehicle_nou': VEHICLE_CLASSES_NOU,
         'nonvehicle': NON_VEHICLE_CLASSES,
         'outdoor': OUTDOOR_CLASSES,
         'nonoutdoor': NON_OUTDOOR_CLASSES,
