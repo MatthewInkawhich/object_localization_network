@@ -24,6 +24,14 @@ CLASSES = ('person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
            'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
            'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
            'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+HCOCO_CLASSES = (
+           'airplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
+           'cat', 'chair', 'cow', 'dining table', 'dog', 'horse', 
+           'motorcycle', 'person', 'potted plant', 'sheep', 'couch',
+           'train', 'tv', 'traffic light', 'stop sign', 'bench', 'backpack',
+           'handbag', 'skis', 'sports ball', 'skateboard', 'surfboard', 
+           'fork', 'bowl', 'apple', 'pizza', 'toilet', 'laptop', 'remote',
+           'oven', 'sink', 'refrigerator', 'toothbrush')
 VOC_CLASSES = (
            'airplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
            'cat', 'chair', 'cow', 'dining table', 'dog', 'horse', 
@@ -34,15 +42,19 @@ VOC5_CLASSES = (
 ANIMAL_CLASSES = (
            'bird', 'cat', 'dog',
            'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe')
+HANIMAL_CLASSES = (
+           'bird', 'cat', 'dog', 'horse', 'cow')
 VEHICLE_CLASSES = (
            'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
            'train', 'truck', 'boat')
 
 class_names_dict = {
     'all': CLASSES,
+    'hcoco': HCOCO_CLASSES,
     'voc': VOC_CLASSES,
     'voc5': VOC5_CLASSES,
     'animal': ANIMAL_CLASSES,
+    'hanimal': HANIMAL_CLASSES,
     'vehicle': VEHICLE_CLASSES,
 }
 

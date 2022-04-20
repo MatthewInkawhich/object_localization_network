@@ -131,6 +131,7 @@ def single_gpu_test(model,
             #for ann_i in range(result[0][0].shape[0]):
             #    if result[0][0][ann_i][-1] >= show_score_thr:
             #        print(result[0][0][ann_i])
+            #exit()
 
 
         batch_size = len(result)

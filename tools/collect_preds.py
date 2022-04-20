@@ -34,6 +34,10 @@ def parse_args():
         action='store_true',
         help='Whether to use combined set')
     parser.add_argument(
+        '--val',
+        action='store_true',
+        help='Whether to collect preds on the val set')
+    parser.add_argument(
         '--fuse-conv-bn',
         action='store_true',
         help='Whether to fuse conv and bn, this will slightly increase'
@@ -72,6 +76,8 @@ def main():
     args = parse_args()
     assert args.score_thr >= 0 and args.score_thr <= 1, "score_thr needs to be in range [0,1]"
     assert not (args.auxiliary and args.combined), "cannot set both auxiliary and combined flags"
+    assert not (args.auxiliary and args.val), "cannot set both auxiliary and val flags"
+    assert not (args.combined and args.val), "cannot set both combined and val flags"
 
     cfg = Config.fromfile(args.config)
     if args.cfg_options is not None:
@@ -130,6 +136,8 @@ def main():
     elif args.combined:
         cfg.data.test.ann_file = 'data/coco_imagenet/annotations.json'
         cfg.data.test.img_prefix = 'data/coco_imagenet/images/'
+    elif args.val:
+        pass
     else:
         cfg.data.test.ann_file = cfg.data.test.ann_file.replace("val2017", "train2017")
         cfg.data.test.img_prefix = cfg.data.test.img_prefix.replace("val2017", "train2017")
@@ -140,6 +148,7 @@ def main():
         print("args.round:", args.round)
         print("args.auxiliary:", args.auxiliary)
         print("args.combined:", args.combined)
+        print("args.val:", args.val)
         print("dataset:", len(dataset))
     data_loader = build_dataloader(
         dataset,
@@ -170,14 +179,19 @@ def main():
     # Run inference on all images
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
-        #outputs = single_gpu_test(model, data_loader, show=False, out_dir=None, show_score_thr=0.3)
-        outputs = single_gpu_collect_preds(model, data_loader, score_thr=args.score_thr)
+        if args.val:
+            outputs = single_gpu_test(model, data_loader, show=False, out_dir=None, show_score_thr=0.3)
+        else:
+            outputs = single_gpu_collect_preds(model, data_loader, score_thr=args.score_thr)
     else:
         model = MMDistributedDataParallel(
             model.cuda(),
             device_ids=[torch.cuda.current_device()],
             broadcast_buffers=False)
-        outputs = multi_gpu_collect_preds(model, data_loader, args.score_thr, args.tmpdir, args.gpu_collect)
+        if args.val:
+            outputs = multi_gpu_test(model, data_loader, args.tmpdir, args.gpu_collect)
+        else:
+            outputs = multi_gpu_collect_preds(model, data_loader, args.score_thr, args.tmpdir, args.gpu_collect)
 
     # tmp
     #if rank == 0:
@@ -191,6 +205,11 @@ def main():
             jsonfile_prefix = os.path.join(args.checkpoint.replace(args.checkpoint.split('/')[-1], ""), f"auxiliary_preds_round{args.round}")
         elif args.combined:
             jsonfile_prefix = os.path.join(args.checkpoint.replace(args.checkpoint.split('/')[-1], ""), f"combined_preds_round{args.round}")
+        elif args.val:
+            outfile = os.path.join(args.checkpoint.replace(args.checkpoint.split('/')[-1], ""), "val_preds.pkl")
+            mmcv.dump(outputs, outfile)
+            print("\noutput dumped to:", outfile)
+            return
         else:
             jsonfile_prefix = os.path.join(args.checkpoint.replace(args.checkpoint.split('/')[-1], ""), f"preds_round{args.round}")
         print("\njsonfile_prefix:", jsonfile_prefix)

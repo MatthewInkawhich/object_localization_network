@@ -272,6 +272,27 @@ class CocoUSplitDataset(CocoDataset):
                'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
 
 
+    HANIMAL_CLASSES = (
+               'bird', 'cat', 'dog', 'horse', 'cow', 'UNKNOWN')
+    HANIMAL_CLASSES_NOU = (
+               'bird', 'cat', 'dog', 'horse', 'cow')
+    NON_HANIMAL_CLASSES = ('person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
+               'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
+               'stop sign', 'parking meter', 'bench', 
+               'sheep', 'elephant', 'bear', 'zebra', 'giraffe',
+               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
+               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+               'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
+               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
+               'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
+               'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop',
+               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
+               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
+               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+
+
+
     ACCESSORY_CLASSES = (
                'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'UNKNOWN')
     NON_ACCESSORY_CLASSES = (
@@ -445,6 +466,9 @@ class CocoUSplitDataset(CocoDataset):
         'animal': ANIMAL_CLASSES,
         'animal_nou': ANIMAL_CLASSES_NOU,
         'nonanimal': NON_ANIMAL_CLASSES,
+        'hanimal': HANIMAL_CLASSES,
+        'hanimal_nou': HANIMAL_CLASSES_NOU,
+        'nonhanimal': NON_HANIMAL_CLASSES,
         'accessory': ACCESSORY_CLASSES,
         'nonaccessory': NON_ACCESSORY_CLASSES,
         'sports': SPORTS_CLASSES,
