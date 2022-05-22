@@ -130,10 +130,12 @@ def imshow_det_bboxes(img,
         np_poly = np.array(poly).reshape((4, 2))
         polygons.append(Polygon(np_poly))
         color.append(bbox_color)
+        #label_text = class_names[
+        #    label] if class_names is not None else f'class {label}'
         label_text = class_names[
-            label] if class_names is not None else f'class {label}'
+            label] if class_names is not None else ""
         if len(bbox) > 4:
-            label_text += f'|{bbox[-1]:.02f}'
+            label_text += f'{bbox[-1]:.02f}'
         ax.text(
             bbox_int[0],
             bbox_int[1],
@@ -275,6 +277,9 @@ def imshow_gt_det_bboxes(img,
         segms = mmcv.concat_list(segm_result)
         segms = mask_util.decode(segms)
         segms = segms.transpose(2, 0, 1)
+
+    print("bboxes:", bboxes)
+    print("labels:", labels)
 
     img = imshow_det_bboxes(
         img,

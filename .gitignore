@@ -126,3 +126,6 @@ token.txt
 
 # Out
 out/
+
+# Images
+*.jpg

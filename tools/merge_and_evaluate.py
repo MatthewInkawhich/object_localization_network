@@ -2,6 +2,7 @@ import argparse
 import os
 import warnings
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 import mmcv
@@ -181,37 +182,60 @@ def main():
 
         marker_size = 10
         ### Plot all
-        #plt.scatter(list(range(current_pps.shape[0])), current_pps[:,-1], s=marker_size, label='STPN Predictions')
-        #plt.scatter(list(range(current_sps.shape[0])), current_sps[:,-1], s=marker_size, label='Faster R-CNN Predictions')
-        #plt.legend()
-        #plt.ylim(-0.02, 1.02)
-        #plt.xlabel('Prediction Rank')
-        #plt.ylabel('Score')
+        fig = plt.figure(figsize=(4, 4))
+        plt.scatter(list(range(current_pps.shape[0])), current_pps[:,-1], s=marker_size, label='FT-STPN+ Predictions')
+        plt.scatter(list(range(current_sps.shape[0])), current_sps[:,-1], s=marker_size, label='Faster R-CNN Predictions')
+        plt.legend()
+        plt.ylim(-0.02, 1.02)
+        plt.xlabel('Prediction Rank')
+        plt.ylabel('Score')
         #plt.show()
 
 
         ### Plot useful / normalized useful
-        #plt.scatter(list(range(current_pps.shape[0])), current_pps[:,-1], s=marker_size, label='STPN Predictions')
-        #plt.scatter(list(range(current_sps.shape[0])), current_sps[:,-1], s=marker_size, label='Faster R-CNN Predictions')
-        #plt.scatter(list(range(len(useful_current_sps))), useful_current_sps[:,-1], s=marker_size, label='Useful Faster R-CNN Predictions (Top {}%)'.format(round(args.N*100)))
-        #plt.scatter(list(range(normalized_useful_current_sps.shape[0])), normalized_useful_current_sps[:,-1], s=marker_size, label='Normalized Useful Faster R-CNN Predictions (Top {}%)'.format(round(args.N*100)))
-        #plt.legend()
-        #plt.ylim(-0.02, 1.02)
-        #plt.xlabel('Prediction Rank')
-        #plt.ylabel('Score')
+        plt.scatter(list(range(current_pps.shape[0])), current_pps[:,-1], s=marker_size, label='FT-STPN+ Predictions')
+        plt.scatter(list(range(current_sps.shape[0])), current_sps[:,-1], s=marker_size, label='Faster R-CNN Predictions')
+        plt.scatter(list(range(len(useful_current_sps))), useful_current_sps[:,-1], s=marker_size, label='Useful Faster R-CNN Predictions (Top {}%)'.format(round(args.N*100)))
+        plt.scatter(list(range(normalized_useful_current_sps.shape[0])), normalized_useful_current_sps[:,-1], s=marker_size, label='Normalized Useful Faster R-CNN Predictions (Top {}%)'.format(round(args.N*100)))
+        plt.legend()
+        plt.ylim(-0.02, 1.02)
+        plt.xlabel('Prediction Rank')
+        plt.ylabel('Score')
         #plt.show()
     
     
         ### Plot 
         sorted_agreeing_preds = agreeing_preds[agreeing_preds[:, -1].argsort()][::-1]
-        plt.scatter(list(range(clean_current_pps.shape[0])), clean_current_pps[:,-1], s=marker_size, label='STPN Predictions')
+        plt.scatter(list(range(clean_current_pps.shape[0])), clean_current_pps[:,-1], s=marker_size, label='FT-STPN+ Predictions')
         plt.scatter(list(range(clean_normalized_useful_current_sps.shape[0])), clean_normalized_useful_current_sps[:,-1], s=marker_size, color='r', label='Normalized Useful Faster R-CNN Predictions (Top {}%)'.format(round(args.N*100)))
         plt.scatter(list(range(sorted_agreeing_preds.shape[0])), sorted_agreeing_preds[:,-1], s=marker_size, color='k', label='Overlapping Predictions')
         plt.legend()
         plt.ylim(-0.02, 1.02)
         plt.xlabel('Prediction Rank')
         plt.ylabel('Score')
-        plt.show()
+        #plt.show()
+
+
+        all_primary_preds = current_pps[:,-1].tolist()
+        all_secondary_preds = current_sps[:,-1].tolist()
+        useful_secondary_preds = useful_current_sps[:,-1].tolist()
+        normalized_useful_secondary_preds = normalized_useful_current_sps[:,-1].tolist()
+        nooverlap_primary_preds = clean_current_pps[:,-1].tolist()
+        nooverlap_normalized_useful_secondary_preds = clean_normalized_useful_current_sps[:,-1].tolist()
+        overlapping_preds = sorted_agreeing_preds[:,-1].tolist()
+
+        app_df = pd.DataFrame({'all_primary_preds': all_primary_preds})
+        asp_df = pd.DataFrame({'all_secondary_preds': all_secondary_preds})
+        usp_df = pd.DataFrame({'useful_secondary_preds': useful_secondary_preds})
+        nusp_df = pd.DataFrame({'normalized_useful_secondary_preds': normalized_useful_secondary_preds})
+        nopp_df = pd.DataFrame({'nooverlap_primary_preds': nooverlap_primary_preds})
+        nonusp_df = pd.DataFrame({'nooverlap_normalized_useful_secondary_preds': nooverlap_normalized_useful_secondary_preds})
+        op_df = pd.DataFrame({'overlapping_preds': overlapping_preds})
+
+        df = pd.concat([app_df, asp_df, usp_df, nusp_df, nopp_df, nonusp_df, op_df], axis=1)
+        print("Saving df to disk...")
+        df.to_csv('merge_plot_dict.csv', index=False)
+        print("df saved!")
 
 
         exit()
