@@ -67,6 +67,7 @@ def parse_args():
     parser.add_argument('split', type=str, help='ID class split')
     parser.add_argument('percent_new', type=float, help='percent increase from new pseudo-labels relative to original_id_ann_count')
     parser.add_argument('--restricted', action='store_true', help='non-(+): only generate use PLs from images already containing ID objects')
+    #parser.add_argument('--oracle', help='use oracle pseudo-label filtering (human-in-the-loop), this is the path to ALL GT labels (ID&OOD)')
     args = parser.parse_args()
     return args
 

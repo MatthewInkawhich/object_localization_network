@@ -458,16 +458,19 @@ class CocoSplitDataset(CocoDataset):
         self.train_cat_ids = self.coco.get_cat_ids(
             cat_names=self.class_names_dict[self.train_class]
             )
-        print("EVAL CLASSES:", self.class_names_dict[self.eval_class], len(self.class_names_dict[self.eval_class]))
+        print("train_cat_ids:", self.train_cat_ids)
+        print("\nEVAL CLASSES:", self.class_names_dict[self.eval_class], len(self.class_names_dict[self.eval_class]))
         self.eval_cat_ids = self.coco.get_cat_ids(
             cat_names=self.class_names_dict[self.eval_class]
             )
+        print("eval_cat_ids:", self.train_cat_ids)
         if self.is_class_agnostic:
             self.cat2label = {cat_id: 0 for cat_id in self.cat_ids}
         else:
             self.cat2label = {
                 cat_id: i for i, cat_id in enumerate(self.cat_ids)}
 
+        print("\ncat2label:", self.cat2label)
         self.img_ids = self.coco.get_img_ids()
         data_infos = []
         for i in self.img_ids:
