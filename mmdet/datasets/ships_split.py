@@ -37,7 +37,7 @@ except AssertionError:
 
 
 @DATASETS.register_module()
-class CocoSplitDataset(CocoDataset):
+class ShipsSplitDataset(CocoDataset):
 
     def __init__(self, 
                  is_class_agnostic=False, 
@@ -49,173 +49,64 @@ class CocoSplitDataset(CocoDataset):
         self.is_class_agnostic = is_class_agnostic
         self.train_class = train_class
         self.eval_class = eval_class
-        super(CocoSplitDataset, self).__init__(**kwargs)
-    
-    CLASSES = ('person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
-               'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
-               'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog',
-               'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe',
-               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
-               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-               'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
-               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
-               'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
-               'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop',
-               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
-               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
-               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+        super(ShipsSplitDataset, self).__init__(**kwargs)
 
+    CLASSES = ('Other Ship', 'Other Warship', 'Submarine', 'Other Aircraft Carrier', 'Enterprise', 'Nimitz', 'Midway',
+               'Ticonderoga',
+               'Other Destroyer', 'Atago DD', 'Arleigh Burke DD', 'Hatsuyuki DD', 'Hyuga DD', 'Asagiri DD', 'Other Frigate',
+               'Perry FF',
+               'Patrol', 'Other Landing', 'YuTing LL', 'YuDeng LL', 'YuDao LL', 'YuZhao LL', 'Austin LL', 'Osumi LL',
+               'Wasp LL', 'LSD 41 LL', 'LHA LL', 'Commander', 'Other Auxiliary Ship', 'Medical Ship', 'Test Ship',
+               'Training Ship',
+               'AOE', 'Masyuu AS', 'Sanantonio AS', 'EPF', 'Other Merchant', 'Container Ship', 'RoRo', 'Cargo',
+               'Barge', 'Tugboat', 'Ferry', 'Yacht', 'Sailboat', 'Fishing Vessel', 'Oil Tanker', 'Hovercraft',
+               'Motorboat', 'Dock',)
 
-    VOC_CLASSES = (
-               'airplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
-               'cat', 'chair', 'cow', 'dining table', 'dog', 'horse', 
-               'motorcycle', 'person', 'potted plant', 'sheep', 'couch',
-               'train', 'tv')
-    NONVOC_CLASSES = (
-               'truck', 'traffic light', 'fire hydrant',
-               'stop sign', 'parking meter', 'bench',
-               'elephant', 'bear', 'zebra', 'giraffe',
-               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
-               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-               'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
-               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
-               'hot dog', 'pizza', 'donut', 'cake',
-               'bed', 'toilet', 'laptop',
-               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
-               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
-               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+    ALLSHIP_CLASSES = ('Other Ship', 'Other Warship', 'Submarine', 'Other Aircraft Carrier', 'Enterprise', 'Nimitz', 'Midway',
+               'Ticonderoga',
+               'Other Destroyer', 'Atago DD', 'Arleigh Burke DD', 'Hatsuyuki DD', 'Hyuga DD', 'Asagiri DD', 'Other Frigate',
+               'Perry FF',
+               'Patrol', 'Other Landing', 'YuTing LL', 'YuDeng LL', 'YuDao LL', 'YuZhao LL', 'Austin LL', 'Osumi LL',
+               'Wasp LL', 'LSD 41 LL', 'LHA LL', 'Commander', 'Other Auxiliary Ship', 'Medical Ship', 'Test Ship',
+               'Training Ship',
+               'AOE', 'Masyuu AS', 'Sanantonio AS', 'EPF', 'Other Merchant', 'Container Ship', 'RoRo', 'Cargo',
+               'Barge', 'Tugboat', 'Ferry', 'Yacht', 'Sailboat', 'Fishing Vessel', 'Oil Tanker', 'Hovercraft',
+               'Motorboat',)
 
+    WARSHIP_CLASSES = ('Other Warship', 'Submarine', 'Other Aircraft Carrier', 'Enterprise', 'Nimitz', 'Midway',
+               'Ticonderoga',
+               'Other Destroyer', 'Atago DD', 'Arleigh Burke DD', 'Hatsuyuki DD', 'Hyuga DD', 'Asagiri DD', 'Other Frigate',
+               'Perry FF',
+               'Patrol', 'Other Landing', 'YuTing LL', 'YuDeng LL', 'YuDao LL', 'YuZhao LL', 'Austin LL', 'Osumi LL',
+               'Wasp LL', 'LSD 41 LL', 'LHA LL', 'Commander', 'Other Auxiliary Ship', 'Medical Ship', 'Test Ship',
+               'Training Ship',
+               'AOE', 'Masyuu AS', 'Sanantonio AS', 'EPF',)
 
-    VOC10_CLASSES = (
-               'airplane', 'bicycle', 'bird', 'bottle', 'car',
-               'chair', 'cow', 'dog', 'person', 'tv')
-    NONVOC10_CLASSES = (
-               'motorcycle', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
-               'stop sign', 'parking meter', 'bench', 'cat', 'horse', 'sheep',
-               'elephant', 'bear', 'zebra', 'giraffe',
-               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
-               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-               'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
-               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
-               'hot dog', 'pizza', 'donut', 'cake', 'couch', 'potted plant',
-               'bed', 'dining table', 'toilet', 'laptop',
-               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
-               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
-               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
-    
+    NONWARSHIP_CLASSES = ('Other Ship', 'Other Merchant', 'Container Ship', 'RoRo', 'Cargo',
+               'Barge', 'Tugboat', 'Ferry', 'Yacht', 'Sailboat', 'Fishing Vessel', 'Oil Tanker', 'Hovercraft',
+               'Motorboat',) # 'Dock',)
 
-    VOC5_CLASSES = (
-               'bicycle', 'car', 'chair', 'dog', 'person')
-    NONVOC5_CLASSES = (
-               'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
-               'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'horse', 'sheep',
-               'cow', 'elephant', 'bear', 'zebra', 'giraffe',
-               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
-               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-               'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
-               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
-               'hot dog', 'pizza', 'donut', 'cake', 'couch', 'potted plant',
-               'bed', 'dining table', 'toilet', 'tv', 'laptop',
-               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
-               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
-               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+    MERCHANT_CLASSES = ('Other Merchant', 'Container Ship', 'RoRo', 'Cargo',
+               'Barge', 'Tugboat', 'Ferry', 'Yacht', 'Sailboat', 'Fishing Vessel', 'Oil Tanker', 'Hovercraft',
+               'Motorboat',)
 
-
-    VOC2_CLASSES = (
-               'car', 'person')
-    NONVOC2_CLASSES = (
-               'bicycle', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
-               'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep',
-               'cow', 'elephant', 'bear', 'zebra', 'giraffe',
-               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
-               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-               'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
-               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
-               'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant',
-               'bed', 'dining table', 'toilet', 'tv', 'laptop',
-               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
-               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
-               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
-
-
-    VOC_V_CLASSES = (
-               'airplane', 'bicycle', 'boat', 'bus', 'car', 'motorcycle', 'train')
-    NONVOC_V_CLASSES = (
-               'person',
-               'truck', 'traffic light', 'fire hydrant',
-               'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog',
-               'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe',
-               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
-               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-               'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
-               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
-               'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
-               'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop',
-               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
-               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
-               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
-
-
-    VOC_H_CLASSES = (
-               'bottle', 'chair', 'dining table', 'potted plant', 'couch', 'tv')
-    NONVOC_H_CLASSES = (
-               'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
-               'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
-               'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog',
-               'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe',
-               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
-               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-               'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
-               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
-               'hot dog', 'pizza', 'donut', 'cake', 
-               'bed', 'toilet', 'laptop',
-               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
-               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
-               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
-
-
-    VOC_A_CLASSES = (
-               'bird', 'cat', 'cow', 'dog', 'horse', 'sheep')
-    NONVOC_A_CLASSES = (
-               'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
-               'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
-               'stop sign', 'parking meter', 'bench', 
-               'elephant', 'bear', 'zebra', 'giraffe',
-               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
-               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-               'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
-               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
-               'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
-               'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop',
-               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
-               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
-               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+    NONMERCHANT_CLASSES = ('Other Ship', 'Other Warship', 'Submarine', 'Other Aircraft Carrier', 'Enterprise', 'Nimitz', 'Midway',
+               'Ticonderoga',
+               'Other Destroyer', 'Atago DD', 'Arleigh Burke DD', 'Hatsuyuki DD', 'Hyuga DD', 'Asagiri DD', 'Other Frigate',
+               'Perry FF',
+               'Patrol', 'Other Landing', 'YuTing LL', 'YuDeng LL', 'YuDao LL', 'YuZhao LL', 'Austin LL', 'Osumi LL',
+               'Wasp LL', 'LSD 41 LL', 'LHA LL', 'Commander', 'Other Auxiliary Ship', 'Medical Ship', 'Test Ship',
+               'Training Ship',
+               'AOE', 'Masyuu AS', 'Sanantonio AS', 'EPF',)
 
 
     class_names_dict = {
         'all': CLASSES,
-        'voc': VOC_CLASSES,
-        'nonvoc': NONVOC_CLASSES,
-        'voc10': VOC10_CLASSES,
-        'nonvoc10': NONVOC10_CLASSES,
-        'voc5': VOC5_CLASSES,
-        'nonvoc5': NONVOC5_CLASSES,
-        'voc2': VOC2_CLASSES,
-        'nonvoc2': NONVOC2_CLASSES,
-        'vocv': VOC_V_CLASSES,
-        'nonvocv': NONVOC_V_CLASSES,
-        'voch': VOC_H_CLASSES,
-        'nonvoch': NONVOC_H_CLASSES,
-        'voca': VOC_A_CLASSES,
-        'nonvoca': NONVOC_A_CLASSES,
+        'allship': ALLSHIP_CLASSES,
+        'warship': WARSHIP_CLASSES,
+        'nonwarship': NONWARSHIP_CLASSES,
+        'merchant': MERCHANT_CLASSES,
+        'nonmerchant': NONMERCHANT_CLASSES,
     }
 
 
@@ -232,20 +123,25 @@ class CocoSplitDataset(CocoDataset):
         self.coco = COCO(ann_file)
 
         self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
+        #print("cat_ids:", self.cat_ids)
         print("TRAIN CLASSES:", self.class_names_dict[self.train_class], len(self.class_names_dict[self.train_class]))
         self.train_cat_ids = self.coco.get_cat_ids(
             cat_names=self.class_names_dict[self.train_class]
             )
-        print("EVAL CLASSES:", self.class_names_dict[self.eval_class], len(self.class_names_dict[self.eval_class]))
+        #print("train_cat_ids:", self.train_cat_ids)
+        print("\nEVAL CLASSES:", self.class_names_dict[self.eval_class], len(self.class_names_dict[self.eval_class]))
         self.eval_cat_ids = self.coco.get_cat_ids(
             cat_names=self.class_names_dict[self.eval_class]
             )
+        #print("eval_cat_ids:", self.train_cat_ids)
         if self.is_class_agnostic:
             self.cat2label = {cat_id: 0 for cat_id in self.cat_ids}
         else:
             self.cat2label = {
                 cat_id: i for i, cat_id in enumerate(self.cat_ids)}
 
+        #print("\ncat2label:", self.cat2label)
+        #exit()
         self.img_ids = self.coco.get_img_ids()
         data_infos = []
         for i in self.img_ids:

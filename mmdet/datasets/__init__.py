@@ -2,6 +2,10 @@ from .builder import DATASETS, PIPELINES, build_dataloader, build_dataset
 from .coco import CocoDataset
 from .coco_split import CocoSplitDataset
 from .cocou_split import CocoUSplitDataset
+from .ships_split import ShipsSplitDataset
+from .shipsu_split import ShipsUSplitDataset
+from .ShipRSImageNet_Level2 import ShipRSImageNet_Level2
+from .ShipRSImageNet_Level3 import ShipRSImageNet_Level3
 from .dataset_wrappers import (ClassBalancedDataset, ConcatDataset,
                                RepeatDataset)
 from .samplers import DistributedGroupSampler, DistributedSampler, GroupSampler
@@ -12,5 +16,6 @@ __all__ = [
     'DistributedSampler', 'build_dataloader', 'ConcatDataset', 'RepeatDataset',
     'ClassBalancedDataset', 'DATASETS', 'PIPELINES',
     'build_dataset', 'replace_ImageToTensor', 'get_loading_pipeline'
-    'CocoSplitDataset', 'CocoUSplitDataset',
+    'CocoSplitDataset', 'CocoUSplitDataset', 'ShipsSplitDataset', 'ShipsUSplitDataset',
+    'ShipRSImageNet_Level2', 'ShipRSImageNet_Level3',
 ]

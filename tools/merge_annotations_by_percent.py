@@ -9,6 +9,7 @@ import argparse
 import os
 import json
 import copy
+import random
 from collections import Counter
 
 CLASSES = ('person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
@@ -49,6 +50,30 @@ VEHICLE_CLASSES = (
            'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
            'train', 'truck', 'boat')
 
+SHIP_CLASSES = ('Other Ship', 'Other Warship', 'Submarine', 'Other Aircraft Carrier', 'Enterprise', 'Nimitz', 'Midway',
+           'Ticonderoga',
+           'Other Destroyer', 'Atago DD', 'Arleigh Burke DD', 'Hatsuyuki DD', 'Hyuga DD', 'Asagiri DD', 'Other Frigate',
+           'Perry FF',
+           'Patrol', 'Other Landing', 'YuTing LL', 'YuDeng LL', 'YuDao LL', 'YuZhao LL', 'Austin LL', 'Osumi LL',
+           'Wasp LL', 'LSD 41 LL', 'LHA LL', 'Commander', 'Other Auxiliary Ship', 'Medical Ship', 'Test Ship',
+           'Training Ship',
+           'AOE', 'Masyuu AS', 'Sanantonio AS', 'EPF', 'Other Merchant', 'Container Ship', 'RoRo', 'Cargo',
+           'Barge', 'Tugboat', 'Ferry', 'Yacht', 'Sailboat', 'Fishing Vessel', 'Oil Tanker', 'Hovercraft',
+           'Motorboat', 'Dock',)
+
+WARSHIP_CLASSES = ('Other Warship', 'Submarine', 'Other Aircraft Carrier', 'Enterprise', 'Nimitz', 'Midway',
+           'Ticonderoga',
+           'Other Destroyer', 'Atago DD', 'Arleigh Burke DD', 'Hatsuyuki DD', 'Hyuga DD', 'Asagiri DD', 'Other Frigate',
+           'Perry FF',
+           'Patrol', 'Other Landing', 'YuTing LL', 'YuDeng LL', 'YuDao LL', 'YuZhao LL', 'Austin LL', 'Osumi LL',
+           'Wasp LL', 'LSD 41 LL', 'LHA LL', 'Commander', 'Other Auxiliary Ship', 'Medical Ship', 'Test Ship',
+           'Training Ship',
+           'AOE', 'Masyuu AS', 'Sanantonio AS', 'EPF',)
+
+MERCHANT_CLASSES = ('Other Merchant', 'Container Ship', 'RoRo', 'Cargo',
+           'Barge', 'Tugboat', 'Ferry', 'Yacht', 'Sailboat', 'Fishing Vessel', 'Oil Tanker', 'Hovercraft',
+           'Motorboat',)
+
 class_names_dict = {
     'all': CLASSES,
     'hcoco': HCOCO_CLASSES,
@@ -57,6 +82,8 @@ class_names_dict = {
     'animal': ANIMAL_CLASSES,
     'hanimal': HANIMAL_CLASSES,
     'vehicle': VEHICLE_CLASSES,
+    'warship': WARSHIP_CLASSES,
+    'merchant': MERCHANT_CLASSES,
 }
 
 def parse_args():
@@ -67,7 +94,8 @@ def parse_args():
     parser.add_argument('split', type=str, help='ID class split')
     parser.add_argument('percent_new', type=float, help='percent increase from new pseudo-labels relative to original_id_ann_count')
     parser.add_argument('--restricted', action='store_true', help='non-(+): only generate use PLs from images already containing ID objects')
-    #parser.add_argument('--oracle', help='use oracle pseudo-label filtering (human-in-the-loop), this is the path to ALL GT labels (ID&OOD)')
+    parser.add_argument('--oracle-anns', type=str, help='use oracle pseudo-label filtering (human-in-the-loop), this is the path to ALL GT labels (ID&OOD)')
+    parser.add_argument('--oracle-filter-percent', type=float, help='percent of bad pseudo-labels to filter out')
     args = parser.parse_args()
     return args
 
@@ -152,6 +180,14 @@ def main():
         new_filepath = os.path.join(args.preds.split('/robustpreds')[0], f'robust{jitter}_annotations_for_round{next_round}_p{str_percent_new}.json')
     elif args.restricted:
         new_filepath = os.path.join(args.preds.split('/preds_round')[0], f'restricted_{args.split}_annotations_for_round{next_round}_p{str_percent_new}.json')
+    elif args.oracle_anns:
+        assert args.oracle_filter_percent >= 0 and args.oracle_filter_percent <= 1.0, "Error: oracle_filter_percent argument must be in [0,1]"
+        if args.oracle_filter_percent < 1.0:
+            str_oracle_filter_percent = "{:.2f}".format(args.oracle_filter_percent).split('.')[-1]
+        else:
+            str_oracle_filter_percent = "{:.3f}".format(args.oracle_filter_percent * .1).split('.')[-1]
+
+        new_filepath = os.path.join(args.preds.split('/preds_round')[0], f'filter{str_oracle_filter_percent}_annotations_for_round{next_round}_p{str_percent_new}.json')
     else:
         new_filepath = os.path.join(args.preds.split('/preds_round')[0], f'annotations_for_round{next_round}_p{str_percent_new}.json')
     print("new_filepath:", new_filepath)
@@ -162,6 +198,9 @@ def main():
         source_contents = json.load(f)
     with open(args.preds, 'r') as f:
         preds_contents = json.load(f)
+    if args.oracle_anns:
+        with open(args.oracle_anns, 'r') as f:
+            oracle_anns_contents = json.load(f)
 
     # Initialize new_contents
     new_contents = copy.deepcopy(source_contents)
@@ -213,6 +252,17 @@ def main():
             else:
                 source_img2idann_map[curr_image_id] = [ann]
 
+        
+    if args.oracle_anns:
+        all_img2allann_map = {}
+        for ann in oracle_anns_contents['annotations']:
+            curr_image_id = ann['image_id']
+            if curr_image_id in all_img2allann_map:
+                all_img2allann_map[curr_image_id].append(ann)
+            else:
+                all_img2allann_map[curr_image_id] = [ann]
+
+        
     #for k, v in source_img2idann_map.items():
     #    print("\n", k)
     #    for i in range(len(v)):
@@ -222,14 +272,14 @@ def main():
     # that don't contain an ID instance
     if args.restricted:
         # Filter preds_contents
-        print("\nFiltering preds_contents...")
-        filtered_preds_contents = []
+        print("\nFiltering restricted preds_contents...")
+        restricted_preds_contents = []
         for i in range(len(preds_contents)):
             if preds_contents[i]['image_id'] in source_img2idann_map: 
-                filtered_preds_contents.append(preds_contents[i])
+                restricted_preds_contents.append(preds_contents[i])
 
         print("preds_contents (before):", len(preds_contents))
-        preds_contents = filtered_preds_contents
+        preds_contents = restricted_preds_contents
         print("preds_contents (after):", len(preds_contents))
 
 
@@ -272,14 +322,42 @@ def main():
     candidate_pseudolabels.sort(key=lambda x: x['score'], reverse=True)
    
     print("len(candidate_pseudolabels):", len(candidate_pseudolabels))
-    # Add the top sorted candidate pseudolabels to new_contents['annotations']
+    # Take the top sorted candidate pseudolabels
     if len(candidate_pseudolabels) <= max_allowed_new_preds:
-        new_contents['annotations'].extend(candidate_pseudolabels)
+        #new_contents['annotations'].extend(candidate_pseudolabels)
+        top_candidate_pseudolabels = candidate_pseudolabels
     else:
-        new_contents['annotations'].extend(candidate_pseudolabels[:max_allowed_new_preds])
+        #new_contents['annotations'].extend(candidate_pseudolabels[:max_allowed_new_preds])
+        top_candidate_pseudolabels = candidate_pseudolabels[:max_allowed_new_preds]
+
+    
 
 
-    print("total source anns:", len(source_contents['annotations']))
+    # If we are passed oracle filtering options, filter out R% of the bad pseudo-labels
+    if args.oracle_anns:
+        print("\n\nPerforming oracle filtering...")
+        print("Before filtering:", len(top_candidate_pseudolabels))
+        filtered_top_candidate_pseudolabels = []
+        for i, pl in enumerate(top_candidate_pseudolabels):
+            # If this pl overlaps an object with a hidden label keep it, otherwise remove it 
+            # with probability args.oracle_filter_percent
+            # ** Note that allann == hiddenann because we've already removed overlaps with
+            #    labeled ID instances
+            if gt_overlap_exists(pl, all_img2allann_map):
+                filtered_top_candidate_pseudolabels.append(pl)
+            else:
+                if random.random() >= args.oracle_filter_percent:
+                    filtered_top_candidate_pseudolabels.append(pl)
+        top_candidate_pseudolabels = filtered_top_candidate_pseudolabels
+        print("After filtering:", len(top_candidate_pseudolabels))
+                
+
+
+    # Add to new_contents
+    new_contents['annotations'].extend(top_candidate_pseudolabels)
+
+    # Summarize
+    print("\n\ntotal source anns:", len(source_contents['annotations']))
     print("total new anns", len(new_contents['annotations']))
     diff = len(new_contents['annotations'])-len(source_contents['annotations'])
     print("diff:", diff)

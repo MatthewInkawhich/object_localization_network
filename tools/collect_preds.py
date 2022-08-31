@@ -139,8 +139,11 @@ def main():
     elif args.val:
         pass
     else:
-        cfg.data.test.ann_file = cfg.data.test.ann_file.replace("val2017", "train2017")
-        cfg.data.test.img_prefix = cfg.data.test.img_prefix.replace("val2017", "train2017")
+        if "ShipRSImageNet" in cfg.data.test.ann_file:
+            cfg.data.test.ann_file = cfg.data.test.ann_file.replace("val", "train")
+        else:
+            cfg.data.test.ann_file = cfg.data.test.ann_file.replace("val2017", "train2017")
+            cfg.data.test.img_prefix = cfg.data.test.img_prefix.replace("val2017", "train2017")
 
     dataset = build_dataset(cfg.data.test)
     if rank == 0:
@@ -149,6 +152,7 @@ def main():
         print("args.auxiliary:", args.auxiliary)
         print("args.combined:", args.combined)
         print("args.val:", args.val)
+        print("cfg.data.test:", cfg.data.test)
         print("dataset:", len(dataset))
     data_loader = build_dataloader(
         dataset,

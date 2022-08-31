@@ -162,7 +162,7 @@ def main():
     # build the dataloader
     if args.evalclass:
         cfg.data.test.eval_class = args.evalclass
-    print("cfg.data.test.eval_class:", cfg.data.test.eval_class)
+        print("cfg.data.test.eval_class:", cfg.data.test.eval_class)
     dataset = build_dataset(cfg.data.test)
     data_loader = build_dataloader(
         dataset,
