@@ -77,17 +77,17 @@ def main():
         print("\n\n", i)
 
         # Only consider certain examples...
-        gt_count = 0
-        pl_count = 0
-        pl_check = True
-        for j in range(len(item['gt_scores'])):
-            if item['gt_scores'][j] < 1:
-                pl_count += 1
-            else:
-                gt_count += 1
-        if gt_count < 1 or pl_count < 3:
-            print("SKIPPING...")    
-            continue
+        #gt_count = 0
+        #pl_count = 0
+        #pl_check = True
+        #for j in range(len(item['gt_scores'])):
+        #    if item['gt_scores'][j] < 1:
+        #        pl_count += 1
+        #    else:
+        #        gt_count += 1
+        #if gt_count < 1 or pl_count < 1:
+        #    print("SKIPPING...")    
+        #    continue
 
         #for k,v in item.items():
         #    print("\n",k,v)
@@ -105,43 +105,85 @@ def main():
                 gt_bboxes.append(item['gt_bboxes'][j])
                 gt_labels.append(item['gt_labels'][j])
 
-        gt_bboxes = np.stack(gt_bboxes, axis=0)
-        gt_labels = np.array(gt_labels)
-        print("gt_bboxes:", gt_bboxes)
+
+        print("gt_bboxes:", gt_bboxes, len(gt_bboxes))
         print("gt_labels:", gt_labels)
-        pl_bboxes = np.stack(pl_bboxes, axis=0)
-        pl_labels = np.array(pl_labels)
-        print("pl_bboxes:", pl_bboxes)
+        print("pl_bboxes:", pl_bboxes, len(pl_bboxes))
         print("pl_labels:", pl_labels)
-        
-        # Plot GT boxes
+
+        #gt_bboxes = np.stack(gt_bboxes, axis=0)
+        #gt_labels = np.array(gt_labels)
+        #pl_bboxes = np.stack(pl_bboxes, axis=0)
+        #pl_labels = np.array(pl_labels)
+
+
         thickness = 2
         fig_size = (8, 6)
-        img = imshow_det_bboxes(
-            item['img'],
-            gt_bboxes,
-            gt_labels,
-            bbox_color=(255,17,0),
-            text_color=(255,17,0),
-            thickness=thickness,
-            fig_size=fig_size,
-            show=False,
+        
+        # No GTs or PLs
+        if len(gt_bboxes) == 0 and len(pl_bboxes) == 0:
+            print("No GTs or PLs... skipping")
+            continue
 
-        )
+        # GTs with no PLs
+        elif len(gt_bboxes) > 0 and len(pl_bboxes) == 0:
+            # Plot GT boxes
+            imshow_det_bboxes(
+                item['img'],
+                np.stack(gt_bboxes, axis=0),
+                np.array(gt_labels),
+                bbox_color=(255,17,0),
+                text_color=(255,17,0),
+                thickness=thickness,
+                fig_size=fig_size,
+                #show=(not args.not_show)
+                wait_time=args.show_interval,
+                out_file=filename,
+            )
 
-        # Plot PL boxes
-        imshow_det_bboxes(
-            img,
-            pl_bboxes,
-            pl_labels,
-            bbox_color=(17, 255, 0),
-            text_color=(17, 255, 0),
-            thickness=thickness,
-            fig_size=fig_size,
-            #show=(not args.not_show)
-            wait_time=args.show_interval,
-            out_file=filename,
-        )
+        # No GTs with PLs
+        elif len(gt_bboxes) == 0 and len(pl_bboxes) > 0:
+            # Plot PL boxes
+            imshow_det_bboxes(
+                item['img'],
+                np.stack(pl_bboxes, axis=0),
+                np.array(pl_labels),
+                bbox_color=(17, 255, 0),
+                text_color=(17, 255, 0),
+                thickness=thickness,
+                fig_size=fig_size,
+                #show=(not args.not_show)
+                wait_time=args.show_interval,
+                out_file=filename,
+            )
+
+
+        # GTs with PLs
+        else:
+            # Plot GT boxes
+            img = imshow_det_bboxes(
+                item['img'],
+                np.stack(gt_bboxes, axis=0),
+                np.array(gt_labels),
+                bbox_color=(255,17,0),
+                text_color=(255,17,0),
+                thickness=thickness,
+                fig_size=fig_size,
+                show=False,
+            )
+            # Plot PL boxes
+            imshow_det_bboxes(
+                img,
+                np.stack(pl_bboxes, axis=0),
+                np.array(pl_labels),
+                bbox_color=(17, 255, 0),
+                text_color=(17, 255, 0),
+                thickness=thickness,
+                fig_size=fig_size,
+                #show=(not args.not_show)
+                wait_time=args.show_interval,
+                out_file=filename,
+            )
 
 
 #        imshow_det_bboxes(

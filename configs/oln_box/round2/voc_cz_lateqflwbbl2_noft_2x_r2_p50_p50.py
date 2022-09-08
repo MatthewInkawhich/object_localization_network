@@ -190,7 +190,7 @@ data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
-        ann_file='out/oln_box/round0/voc_cz_2x_r0/annotations_for_round1_p40.json',
+        ann_file='out/oln_box/round1/voc_cz_lateqflwbbl2_noft_2x_r1_p50/annotations_for_round2_p50.json',
         is_class_agnostic=True,
         train_class='voc',
         eval_class='nonvoc',
@@ -206,9 +206,7 @@ data = dict(
     test=dict(
         is_class_agnostic=True,
         train_class='voc',
-        #eval_class='nonvoc',
-        #eval_class='voc_nou',
-        eval_class='all_nou',
+        eval_class='nonvoc',
         type=dataset_type,
         pipeline=test_pipeline))
 
@@ -235,4 +233,4 @@ load_from = None
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/round1/voc_cz_lateqflwbbl2_noft_2x_r1_p40'
+work_dir='./out/oln_box/round2/voc_cz_lateqflwbbl2_noft_2x_r2_p50_p50'

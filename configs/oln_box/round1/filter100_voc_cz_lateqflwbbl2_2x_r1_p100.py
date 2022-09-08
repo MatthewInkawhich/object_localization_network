@@ -1,6 +1,6 @@
 _base_ = [
     '../../_base_/datasets/coco_detection.py',
-    '../../_base_/schedules/schedule_1x.py', 
+    '../../_base_/schedules/schedule_ft4.py', 
     '../../_base_/default_runtime.py'
 ]
 # model settings
@@ -109,7 +109,7 @@ model = dict(
                 add_gt_as_proposals=False),
             allowed_border=0,
             pos_weight=-1,
-            score_beta=2, # New
+            score_beta=2,  # New
             debug=False),
         rpn_proposal=dict(
             nms_across_levels=False,
@@ -162,6 +162,7 @@ img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
+    #dict(type='LoadAnnotations', with_bbox=True),
     dict(type='LoadAnnotations', with_bbox=True, with_score=True),
     dict(type='MinIoURandomCrop', min_ious=(0.1, 0.3, 0.5, 0.7, 0.9), min_crop_size=0.3),  # crop
     dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),  # zoom
@@ -169,6 +170,7 @@ train_pipeline = [
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
+    #dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_scores']),
 ]
 test_pipeline = [
@@ -190,7 +192,7 @@ data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
-        ann_file='out/oln_box/round0/voc_cz_2x_r0/annotations_for_round1_p40.json',
+        ann_file='out/oln_box/round0/voc_cz_2x_r0/filter100_annotations_for_round1_p100.json',
         is_class_agnostic=True,
         train_class='voc',
         eval_class='nonvoc',
@@ -206,19 +208,9 @@ data = dict(
     test=dict(
         is_class_agnostic=True,
         train_class='voc',
-        #eval_class='nonvoc',
-        #eval_class='voc_nou',
-        eval_class='all_nou',
+        eval_class='nonvoc',
         type=dataset_type,
         pipeline=test_pipeline))
-
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=500,
-    warmup_ratio=0.001,
-    step=[12, 14])
-total_epochs = 16
 
 checkpoint_config = dict(interval=2)
 # yapf:disable
@@ -231,8 +223,8 @@ log_config = dict(
 # yapf:enable
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = None
+load_from = 'out/oln_box/round0/voc_cz_2x_r0/latest.pth'
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/round1/voc_cz_lateqflwbbl2_noft_2x_r1_p40'
+work_dir='./out/oln_box/round1/filter100_voc_cz_lateqflwbbl2_2x_r1_p100'

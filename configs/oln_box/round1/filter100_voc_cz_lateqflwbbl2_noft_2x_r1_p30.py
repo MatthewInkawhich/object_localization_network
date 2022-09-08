@@ -190,7 +190,7 @@ data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
-        ann_file='out/oln_box/round0/voc_cz_2x_r0/annotations_for_round1_p40.json',
+        ann_file='out/oln_box/round0/voc_cz_2x_r0/filter100_annotations_for_round1_p30.json',
         is_class_agnostic=True,
         train_class='voc',
         eval_class='nonvoc',
@@ -235,4 +235,4 @@ load_from = None
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/round1/voc_cz_lateqflwbbl2_noft_2x_r1_p40'
+work_dir='./out/oln_box/round1/filter100_voc_cz_lateqflwbbl2_noft_2x_r1_p30'

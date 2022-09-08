@@ -1,7 +1,5 @@
 _base_ = [
-    '../../_base_/datasets/coco_detection.py',
-    '../../_base_/schedules/schedule_1x.py', 
-    '../../_base_/default_runtime.py'
+    '../../_base_/schedules/schedule_ft50.py', 
 ]
 # model settings
 model = dict(
@@ -109,7 +107,7 @@ model = dict(
                 add_gt_as_proposals=False),
             allowed_border=0,
             pos_weight=-1,
-            score_beta=2, # New
+            score_beta=2,  # New
             debug=False),
         rpn_proposal=dict(
             nms_across_levels=False,
@@ -156,26 +154,28 @@ model = dict(
     ))
 
 # Dataset
-dataset_type = 'CocoUSplitDataset'
-data_root = 'data/coco/'
+dataset_type = 'ShipsUSplitDataset'
+data_root = 'data/ShipRSImageNet/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
+    #dict(type='LoadAnnotations', with_bbox=True),
     dict(type='LoadAnnotations', with_bbox=True, with_score=True),
     dict(type='MinIoURandomCrop', min_ious=(0.1, 0.3, 0.5, 0.7, 0.9), min_crop_size=0.3),  # crop
-    dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),  # zoom
+    dict(type='Resize', img_scale=(930, 930), keep_ratio=False),  # zoom
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
+    #dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_scores']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(1333, 800),
+        img_scale=(930, 930),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -187,40 +187,37 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=2,
+    samples_per_gpu=4,
     workers_per_gpu=2,
     train=dict(
-        ann_file='out/oln_box/round0/voc_cz_2x_r0/annotations_for_round1_p40.json',
+        ann_file='out/oln_box_ships/round2/warship_cz_lateqflwbbl2_r2_p50_p50/annotations_for_round3_p50.json',
+        img_prefix=data_root + 'VOC_Format/JPEGImages/',
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='warship',
+        eval_class='nonwarship',
         type=dataset_type,
         pipeline=train_pipeline,
         ),
     val=dict(
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='warship',
+        eval_class='nonwarship',
         type=dataset_type,
+        ann_file=data_root + 'COCO_Format/ShipRSImageNet_bbox_val_level_3.json',
+        img_prefix=data_root + 'VOC_Format/JPEGImages/',
         pipeline=test_pipeline),
     test=dict(
         is_class_agnostic=True,
-        train_class='voc',
-        #eval_class='nonvoc',
-        #eval_class='voc_nou',
-        eval_class='all_nou',
+        train_class='warship',
+        eval_class='nonwarship',
         type=dataset_type,
+        ann_file=data_root + 'COCO_Format/ShipRSImageNet_bbox_val_level_3.json',
+        img_prefix=data_root + 'VOC_Format/JPEGImages/',
         pipeline=test_pipeline))
 
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=500,
-    warmup_ratio=0.001,
-    step=[12, 14])
-total_epochs = 16
+evaluation = dict(interval=1, metric='bbox')
 
-checkpoint_config = dict(interval=2)
+checkpoint_config = dict(interval=25)
 # yapf:disable
 log_config = dict(
     interval=10,
@@ -231,8 +228,8 @@ log_config = dict(
 # yapf:enable
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = None
+load_from = 'out/oln_box_ships/round2/warship_cz_lateqflwbbl2_r2_p50_p50/latest.pth'
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/round1/voc_cz_lateqflwbbl2_noft_2x_r1_p40'
+work_dir='./out/oln_box_ships/round3/warship_cz_lateqflwbbl2_r3_p50_p50_p50'
