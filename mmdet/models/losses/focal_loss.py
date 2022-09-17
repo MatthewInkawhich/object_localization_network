@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.ops import sigmoid_focal_loss as _sigmoid_focal_loss
@@ -87,6 +88,39 @@ def sigmoid_focal_loss(pred,
     return loss
 
 
+# NEW by Mink
+def cross_entropy_focal_loss(pred,
+                       target,
+                       weight=None,
+                       gamma=2.0,
+                       alpha=0.25,
+                       reduction='mean',
+                       avg_factor=None):
+    r"""
+        Implementation of multiclass focal loss from 
+        https://discuss.pytorch.org/t/focal-loss-for-imbalanced-multi-class-classification-in-pytorch/61289/2
+    """
+    #print("\n\nInside cross_entropy_focal_loss():")
+    #print("pred:", pred, pred.shape)
+    #print("target:", target, target.shape)
+    #print("weight:", weight, weight.shape)
+
+    # Compute cross entropy against targets
+    ce_loss = F.cross_entropy(pred, target, reduction='none')
+    #print("ce_loss:", ce_loss, ce_loss.shape)
+    # ce_loss is a negative log-likelihood, so to get the likelihood we take -exp
+    pt = torch.exp(-ce_loss)
+    #print("pt:", pt, pt.shape)
+    # Compute focal loss
+    focal_loss = (alpha * (1-pt)**gamma * ce_loss)
+    #print("focal_loss:", focal_loss, focal_loss.shape)
+    # Reduce
+    loss = weight_reduce_loss(focal_loss, weight, reduction, avg_factor)
+    #print("loss:", loss)
+    
+    return loss
+
+
 @LOSSES.register_module()
 class FocalLoss(nn.Module):
 
@@ -111,7 +145,7 @@ class FocalLoss(nn.Module):
             loss_weight (float, optional): Weight of loss. Defaults to 1.0.
         """
         super(FocalLoss, self).__init__()
-        assert use_sigmoid is True, 'Only sigmoid focal loss supported now.'
+        #assert use_sigmoid is True, 'Only sigmoid focal loss supported now.'
         self.use_sigmoid = use_sigmoid
         self.gamma = gamma
         self.alpha = alpha
@@ -153,5 +187,14 @@ class FocalLoss(nn.Module):
                 reduction=reduction,
                 avg_factor=avg_factor)
         else:
-            raise NotImplementedError
+            #raise NotImplementedError
+            loss_cls = self.loss_weight * cross_entropy_focal_loss(
+                pred,
+                target,
+                weight,
+                gamma=self.gamma,
+                alpha=self.alpha,
+                reduction=reduction,
+                avg_factor=avg_factor)
+
         return loss_cls

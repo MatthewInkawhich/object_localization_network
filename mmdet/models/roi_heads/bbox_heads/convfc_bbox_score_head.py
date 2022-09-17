@@ -233,12 +233,18 @@ class ConvFCBBoxScoreHead(ConvFCBBoxHead):
         if cls_score is not None:
             avg_factor = max(torch.sum(label_weights > 0).float().item(), 1.)
             if cls_score.numel() > 0:
+                #print("cls_score:", cls_score, cls_score.shape)
+                #print("labels:", labels, labels.shape)
+                #print("label_weights:", label_weights, label_weights.shape)
                 losses['loss_cls'] = self.loss_cls(
                     cls_score,
                     labels,
                     label_weights,
                     avg_factor=avg_factor,
                     reduction_override=reduction_override)
+                #print("losses[loss_cls]:", losses['loss_cls'])
+                #exit()
+
                 losses['acc'] = accuracy(cls_score, labels)
         if bbox_pred is not None:
             bg_class_ind = self.num_classes
@@ -341,11 +347,103 @@ class ConvFCBBoxScoreHead(ConvFCBBoxHead):
             return det_bboxes, det_labels
 
 
+
+@HEADS.register_module()
+class ConvFCBBoxHybridHead(ConvFCBBoxScoreHead):
+    """
+        Hybrid between Softmax bbox head and OLN bbox head
+    """  
+    def __init__(self, lambda_cls=0.5, **kwargs):
+        super(ConvFCBBoxHybridHead, self).__init__(**kwargs)
+        self.lambda_cls = lambda_cls
+
+    @force_fp32(apply_to=('cls_score', 'bbox_pred'))
+    def get_bboxes(self,
+                   rois,
+                   cls_score,
+                   bbox_pred,
+                   bbox_score,
+                   rpn_score,
+                   img_shape,
+                   scale_factor,
+                   rescale=False,
+                   cfg=None):
+        if isinstance(cls_score, list):
+            cls_score = sum(cls_score) / float(len(cls_score))
+        # cls_score is not used.
+        cls_scores = F.softmax(cls_score, dim=1) if cls_score is not None else None
+        #print("\n\ncfg:", cfg)
+        #print("rois:", rois, rois.shape)
+        #print("cls_scores:", cls_scores, cls_scores.shape)
+        #print("bbox_pred:", bbox_pred, bbox_pred.shape)
+        #print("bbox_score:", bbox_score, bbox_score.shape)
+        #print("rpn_score:", rpn_score, rpn_score.shape)
+        #print("img_shape:", img_shape)
+        #print("scale_factor:", scale_factor)
+        #print("rescale:", rescale)
+        
+        if bbox_pred is not None:
+            bboxes = self.bbox_coder.decode(
+                rois[:, 1:], bbox_pred, max_shape=img_shape)
+        else:
+            bboxes = rois[:, 1:].clone()
+            if img_shape is not None:
+                bboxes[:, [0, 2]].clamp_(min=0, max=img_shape[1])
+                bboxes[:, [1, 3]].clamp_(min=0, max=img_shape[0])
+
+        if rescale and bboxes.size(0) > 0:
+            if isinstance(scale_factor, float):
+                bboxes /= scale_factor
+            else:
+                scale_factor = bboxes.new_tensor(scale_factor)
+                bboxes = (bboxes.view(bboxes.size(0), -1, 4) /
+                          scale_factor).view(bboxes.size()[0], -1)
+
+        ############################################################################
+        # The objectness score of a region is computed as a geometric mean of
+        # the estimated localization quality scores of OLN-RPN and OLN-Box
+        # heads.
+        objectness_scores = torch.sqrt(rpn_score * bbox_score.sigmoid())
+        #print("objectness_scores:", objectness_scores, objectness_scores.shape)
+
+        # Final scores is the weighted interpolation between cls_scores and objectness_scores
+        #print("self.lambda_cls:", self.lambda_cls)
+        scores = self.lambda_cls*cls_scores[:, :-1] + (1-self.lambda_cls)*objectness_scores
+
+        # Concat dummy zero-scores for the background class.
+        scores = torch.cat([scores, torch.zeros_like(scores)], dim=-1)
+        #print("scores:", scores, scores.shape)
+        #exit()
+
+        if cfg is None:
+            return bboxes, scores
+        else:
+            det_bboxes, det_labels = multiclass_nms(bboxes, 
+                                                    scores,
+                                                    cfg.score_thr, cfg.nms,
+                                                    cfg.max_per_img)
+
+            return det_bboxes, det_labels
+
+
 @HEADS.register_module()
 class Shared2FCBBoxScoreHead(ConvFCBBoxScoreHead):
-
     def __init__(self, fc_out_channels=1024, *args, **kwargs):
         super(Shared2FCBBoxScoreHead, self).__init__(
+            num_shared_convs=0,
+            num_shared_fcs=2,
+            num_cls_convs=0,
+            num_cls_fcs=0,
+            num_reg_convs=0,
+            num_reg_fcs=0,
+            fc_out_channels=fc_out_channels,
+            *args,
+            **kwargs)
+
+@HEADS.register_module()
+class Shared2FCBBoxHybridHead(ConvFCBBoxHybridHead):
+    def __init__(self, fc_out_channels=1024, *args, **kwargs):
+        super(Shared2FCBBoxHybridHead, self).__init__(
             num_shared_convs=0,
             num_shared_fcs=2,
             num_cls_convs=0,

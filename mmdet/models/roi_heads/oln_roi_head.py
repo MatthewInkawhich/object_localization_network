@@ -30,6 +30,8 @@ class OlnRoIHead(StandardRoIHead):
         # TODO: a more flexible way to decide which feature maps to use
         bbox_feats = self.bbox_roi_extractor(
             x[:self.bbox_roi_extractor.num_inputs], rois)
+        #print("bbox_feats:", bbox_feats.shape) # (2042, 256, 7, 7)
+        #exit()
         if self.with_shared_head:
             bbox_feats = self.shared_head(bbox_feats)
         cls_score, bbox_pred, bbox_score = self.bbox_head(bbox_feats)
@@ -43,6 +45,9 @@ class OlnRoIHead(StandardRoIHead):
                             gt_scores=None):
         """Run forward function and calculate loss for box head in training."""
         rois = bbox2roi([res.bboxes for res in sampling_results])
+        #print("sampling_results:", sampling_results) # object that describes pos and neg indices for each
+        # image in the batch
+        #print("rois:", rois, rois.shape) # (2048 (i.e., 512*4), 5)
         bbox_results = self._bbox_forward(x, rois)
 
         bbox_targets = self.bbox_head.get_targets(sampling_results, gt_bboxes,

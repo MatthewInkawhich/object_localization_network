@@ -130,6 +130,13 @@ class OlnRPNHead(RPNHead):
         label_weights = label_weights.reshape(-1)
         cls_score = cls_score.permute(0, 2, 3,
                                       1).reshape(-1, self.cls_out_channels)
+
+        #print("labels:", labels, labels.shape)
+        #print("label_weights:", label_weights, label_weights.shape)
+        #print("cls_score:", cls_score, cls_score.shape)
+        #print("num_total_samples:", num_total_samples)
+        #exit()
+
         loss_cls = self.loss_cls(
             cls_score, labels, label_weights, avg_factor=num_total_samples)
         # regression loss
@@ -155,6 +162,11 @@ class OlnRPNHead(RPNHead):
         assert self.cls_out_channels == 1, (
             'cls_out_channels must be 1 for objectness learning.')
         objectness_score = objectness_score.permute(0, 2, 3, 1).reshape(-1)
+
+        #print("objectness_score:", objectness_score, objectness_score.shape)
+        #print("objectness_targets:", objectness_targets, objectness_targets.shape)
+        #print("objectness_weights:", objectness_weights, objectness_weights.shape)
+        #exit()
 
         # Mink
         if self.qofl:        
