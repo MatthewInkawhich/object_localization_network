@@ -353,9 +353,128 @@ class ConvFCBBoxHybridHead(ConvFCBBoxScoreHead):
     """
         Hybrid between Softmax bbox head and OLN bbox head
     """  
-    def __init__(self, lambda_cls=0.5, **kwargs):
+    def __init__(self, lambda_cls=0.5, ss=False, lwbr=False, **kwargs):
         super(ConvFCBBoxHybridHead, self).__init__(**kwargs)
         self.lambda_cls = lambda_cls
+        self.ss = ss
+        self.lwbr = lwbr
+
+
+
+    def _get_target_single(self, pos_bboxes, neg_bboxes, pos_gt_bboxes,
+                           pos_gt_labels, gt_scores, sampling_result, cfg):
+        num_pos = pos_bboxes.size(0)
+        num_neg = neg_bboxes.size(0)
+        num_samples = num_pos + num_neg
+
+        # original implementation uses new_zeros since BG are set to be 0
+        # now use empty & fill because BG cat_id = num_classes,
+        # FG cat_id = [0, num_classes-1]
+        labels = pos_bboxes.new_full((num_samples, ),
+                                     self.num_classes,
+                                     dtype=torch.long)
+        label_weights = pos_bboxes.new_zeros(num_samples)
+        bbox_targets = pos_bboxes.new_zeros(num_samples, 4)
+        bbox_weights = pos_bboxes.new_zeros(num_samples, 4)
+        bbox_score_targets = pos_bboxes.new_zeros(num_samples)
+        bbox_score_weights = pos_bboxes.new_zeros(num_samples)
+
+        if num_pos > 0:
+            labels[:num_pos] = pos_gt_labels
+
+            if self.ss:
+                #print("\n\ngt_scores:", gt_scores, gt_scores.shape)
+                #print("num_gts:", sampling_result.num_gts)
+                #print("sampling_result.pos_assigned_gt_inds:", sampling_result.pos_assigned_gt_inds, sampling_result.pos_assigned_gt_inds.shape)
+                #print("sampling_result.pos_inds:", sampling_result.pos_inds, sampling_result.pos_inds.shape)
+                #print("num_pos:", num_pos)
+                #print("pos_gt_labels:", pos_gt_labels, pos_gt_labels.shape)
+                #print("labels:", labels, labels.shape)
+
+                # First turn all label weights corresponding to PLs to the target PL's score
+                label_weights[:num_pos] = gt_scores[sampling_result.pos_assigned_gt_inds]
+                #print("\nlabel_weights:", label_weights, label_weights.shape)
+                # Now we can easily zero the weights for PLs (the ones > 0 and < 1.0)
+                label_weights[label_weights < 1.0] = 0
+                if cfg.pos_weight > 0:
+                    label_weights *= cfg.pos_weight
+                #print("\nlabel_weights:", label_weights, label_weights.shape)
+                #exit()
+
+            else:
+                pos_weight = 1.0 if cfg.pos_weight <= 0 else cfg.pos_weight
+                label_weights[:num_pos] = pos_weight
+
+
+            if not self.reg_decoded_bbox:
+                pos_bbox_targets = self.bbox_coder.encode(
+                    pos_bboxes, pos_gt_bboxes)
+            else:
+                # When the regression loss (e.g. `IouLoss`, `GIouLoss`)
+                # is applied directly on the decoded bounding boxes, both
+                # the predicted boxes and regression targets should be with
+                # absolute coordinate format.
+                pos_bbox_targets = pos_gt_bboxes
+            bbox_targets[:num_pos, :] = pos_bbox_targets
+
+            # New by Mink
+            # If there are gt_scores present, weight bbox loss according to 
+            # the corresponding GT's score
+            #print("\n\nCurr sampling_result:", sampling_result)
+            #print("\n num_pos:", num_pos)
+            if self.lwbr:
+                assert gt_scores is not None, "Error (Hybrid-RoI): self.lwbr==True but gt_scores is None"
+                assert "score_beta" in cfg, "Error (Hybrid-RoI): gt_scores present but no score_beta in rcnn_train_cfg"
+                #print("\n gt_scores:", gt_scores)
+                num_gts = sampling_result.num_gts
+                pos_assigned_gt_inds = sampling_result.pos_assigned_gt_inds
+                pos_bbox_weights = pos_bboxes.new_zeros(num_pos, 4)
+                for gt_idx in range(num_gts):
+                    pos_bbox_weights[(pos_assigned_gt_inds == gt_idx), :] = gt_scores[gt_idx] ** cfg.score_beta
+                #print("\n pos_bbox_weights:", pos_bbox_weights, pos_bbox_weights.shape)
+                bbox_weights[:num_pos, :] = pos_bbox_weights
+            else:
+                bbox_weights[:num_pos, :] = 1
+
+            #print("\n bbox_weights:", bbox_weights.shape)
+            #for i in range(bbox_weights.shape[0]):
+            #    print(i, bbox_weights[i])
+            #exit()
+            
+            # Bbox-IoU as target
+            if self.bbox_score_type == 'BoxIoU':
+                pos_bbox_score_targets = bbox_overlaps(
+                    pos_bboxes, pos_gt_bboxes, is_aligned=True)
+            # Centerness as target
+            elif self.bbox_score_type == 'Centerness':
+                tblr_bbox_coder = build_bbox_coder(
+                    dict(type='TBLRBBoxCoder', normalizer=1.0))
+                pos_center_bbox_targets = tblr_bbox_coder.encode(
+                    pos_bboxes, pos_gt_bboxes)
+                valid_targets = torch.min(pos_center_bbox_targets,-1)[0] > 0
+                pos_center_bbox_targets[valid_targets==False,:] = 0
+                top_bottom = pos_center_bbox_targets[:,0:2]
+                left_right = pos_center_bbox_targets[:,2:4]
+                pos_bbox_score_targets = torch.sqrt(
+                    (torch.min(top_bottom, -1)[0] / 
+                        (torch.max(top_bottom, -1)[0] + 1e-12)) *
+                    (torch.min(left_right, -1)[0] / 
+                        (torch.max(left_right, -1)[0] + 1e-12)))
+            else:
+                raise ValueError(
+                    'bbox_score_type must be either "BoxIoU" (Default) or \
+                    "Centerness".')
+
+            bbox_score_targets[:num_pos] = pos_bbox_score_targets
+            bbox_score_weights[:num_pos] = 1
+
+        if num_neg > 0:
+            label_weights[-num_neg:] = 1.0
+
+        return (labels, label_weights, bbox_targets, bbox_weights,
+                bbox_score_targets, bbox_score_weights)
+
+
 
     @force_fp32(apply_to=('cls_score', 'bbox_pred'))
     def get_bboxes(self,
