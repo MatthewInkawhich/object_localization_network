@@ -28,11 +28,12 @@ class HybridOlnRPNHead(OlnRPNHead):
         Hybrid OLN+RPN head
     """
 
-    def __init__(self, loss_objectness, objectness_type='Centerness', lambda_cls=0.50, ss=False, lwbr=False, **kwargs):
+    def __init__(self, loss_objectness, objectness_type='Centerness', lambda_cls=0.50, ss=False, lwbr=False, score_scale=1, **kwargs):
         super(HybridOlnRPNHead, self).__init__(loss_objectness, **kwargs)
         self.lambda_cls = lambda_cls
         self.ss = ss
         self.lwbr = lwbr
+        self.score_scale=score_scale
 
 
 
@@ -331,13 +332,14 @@ class HybridOlnRPNHead(OlnRPNHead):
             ########################################################################
             # scores = lambda_cls*cls_scores + (1-lambda_cls)*objectness_scores
 
-            #print("rpn_objectness_scores (AFTER):", rpn_objectness_scores, rpn_objectness_scores.shape)
-            #print("rpn_cls_scores:", rpn_cls_scores, rpn_cls_scores.shape)
+            #print("\n\nRPN...")
             #print("self.lambda_cls:", self.lambda_cls)
+            #print("rpn_objectness_scores:", rpn_objectness_scores, rpn_objectness_scores.shape, rpn_objectness_scores.min(), rpn_objectness_scores.max(), rpn_objectness_scores.mean(), rpn_objectness_scores.median())
+            #print("rpn_cls_scores:", rpn_cls_scores, rpn_cls_scores.shape, rpn_cls_scores.min(), rpn_cls_scores.max(), rpn_cls_scores.mean(), rpn_cls_scores.median())
 
-            scores = self.lambda_cls*rpn_cls_scores + (1 - self.lambda_cls)*rpn_objectness_scores
+            scores = self.lambda_cls*(rpn_cls_scores**self.score_scale) + (1-self.lambda_cls)*(rpn_objectness_scores**self.score_scale)
 
-            #print("scores:", scores, scores.shape)
+            #print("scores:", scores, scores.shape, scores.min(), scores.max(), scores.mean(), scores.median())
             #exit()
 
             ########################################################################

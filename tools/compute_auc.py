@@ -52,7 +52,8 @@ def main():
                 # Compute and print AUC
                 ks = [1, 10, 30, 50, 100, 300, 500, 1000]
                 ars = [k_ar[k] for k in ks]
-                ks_to_print = [10, 30, 100, 300, 1000]
+                #ks_to_print = [10, 30, 100, 300, 1000]
+                ks_to_print = [10, 100, 1000]
                 ars_to_print = [round(k_ar[k]*100, 1) for k in ks_to_print]
                 print("\n\n")
                 print(ks)

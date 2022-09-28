@@ -10,6 +10,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+#import matplotlib.pyplot as plt
+
 from mmcv.cnn import ConvModule
 from mmcv.runner import force_fp32
 
@@ -353,11 +355,12 @@ class ConvFCBBoxHybridHead(ConvFCBBoxScoreHead):
     """
         Hybrid between Softmax bbox head and OLN bbox head
     """  
-    def __init__(self, lambda_cls=0.5, ss=False, lwbr=False, **kwargs):
+    def __init__(self, lambda_cls=0.5, ss=False, lwbr=False, score_scale=1, **kwargs):
         super(ConvFCBBoxHybridHead, self).__init__(**kwargs)
         self.lambda_cls = lambda_cls
         self.ss = ss
         self.lwbr = lwbr
+        self.score_scale = score_scale
 
 
 
@@ -522,17 +525,28 @@ class ConvFCBBoxHybridHead(ConvFCBBoxScoreHead):
         # The objectness score of a region is computed as a geometric mean of
         # the estimated localization quality scores of OLN-RPN and OLN-Box
         # heads.
+        pos_cls_scores = cls_scores[:, :-1]
         objectness_scores = torch.sqrt(rpn_score * bbox_score.sigmoid())
-        #print("objectness_scores:", objectness_scores, objectness_scores.shape)
+
+        # Analyze
+        #print("\n\nBBox Head...")
+        #print("self.lambda_cls:", self.lambda_cls)
+        #print("pos_cls_scores:", pos_cls_scores, pos_cls_scores.shape, pos_cls_scores.min(), pos_cls_scores.max(), pos_cls_scores.mean(), pos_cls_scores.median())
+        #print("objectness_scores:", objectness_scores, objectness_scores.shape, objectness_scores.min(), objectness_scores.max(), objectness_scores.mean(), objectness_scores.median())
 
         # Final scores is the weighted interpolation between cls_scores and objectness_scores
         #print("self.lambda_cls:", self.lambda_cls)
-        scores = self.lambda_cls*cls_scores[:, :-1] + (1-self.lambda_cls)*objectness_scores
+        scores = self.lambda_cls*(pos_cls_scores**self.score_scale) + (1-self.lambda_cls)*(objectness_scores**self.score_scale)
+
+
+        #print("scores:", scores, scores.shape, scores.min(), scores.max(), scores.mean(), scores.median())
+        #exit()
 
         # Concat dummy zero-scores for the background class.
         scores = torch.cat([scores, torch.zeros_like(scores)], dim=-1)
         #print("scores:", scores, scores.shape)
         #exit()
+        ############################################################################
 
         if cfg is None:
             return bboxes, scores

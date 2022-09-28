@@ -1,12 +1,12 @@
 _base_ = [
     '../../_base_/datasets/coco_detection.py',
-    '../../_base_/schedules/schedule_1x.py', 
+    '../../_base_/schedules/schedule_ft4.py', 
     '../../_base_/default_runtime.py'
 ]
 # model settings
-lambda_cls = 0.10
+lambda_cls = 0.25
 lwbr = True
-ss = True
+ss = False
 model = dict(
     type='FasterRCNN',
     pretrained='torchvision://resnet50',
@@ -201,33 +201,25 @@ data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
-        ann_file='out/oln_box/round1/restricted_voc_cz_hybrid_lc10ss_lateqflwbbl2_noft_2x_r1_p30/restricted_voc_annotations_for_round2_p30.json',
+        ann_file='out/oln_box/round1/restricted_voc5_cz_hybrid_lc25_lateqflwbbl2_2x_r1_p30/restricted_voc5_annotations_for_round2_p30.json',
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='voc5',
+        eval_class='nonvoc5',
         type=dataset_type,
         pipeline=train_pipeline,
         ),
     val=dict(
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='voc5',
+        eval_class='nonvoc5',
         type=dataset_type,
         pipeline=test_pipeline),
     test=dict(
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='voc5',
+        eval_class='nonvoc5',
         type=dataset_type,
         pipeline=test_pipeline))
-
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=500,
-    warmup_ratio=0.001,
-    step=[12, 14])
-total_epochs = 16
 
 checkpoint_config = dict(interval=2)
 # yapf:disable
@@ -240,8 +232,8 @@ log_config = dict(
 # yapf:enable
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = None
+load_from = 'out/oln_box/round1/restricted_voc5_cz_hybrid_lc25_lateqflwbbl2_2x_r1_p30/latest.pth'
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/round2/restricted_voc_cz_hybrid_lc10ss_lateqflwbbl2_noft_2x_r2_p30_p30'
+work_dir='./out/oln_box/round2/restricted_voc5_cz_hybrid_lc25_lateqflwbbl2_2x_r2_p30_p30'
