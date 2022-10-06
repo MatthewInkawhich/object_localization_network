@@ -1,8 +1,12 @@
 _base_ = [
-    '../../_base_/schedules/schedule_100e.py',
+    '../../_base_/datasets/coco_detection.py',
+    '../../_base_/schedules/schedule_ft4.py', 
+    '../../_base_/default_runtime.py'
 ]
 # model settings
-lambda_cls = 0.20
+lambda_cls = 0.10
+lwbr = True
+ss = False
 model = dict(
     type='FasterRCNN',
     pretrained='torchvision://resnet50',
@@ -22,7 +26,9 @@ model = dict(
         num_outs=5),
     rpn_head=dict(
         type='HybridOlnRPNHead',
-        lambda_cls=lambda_cls,
+        lambda_cls=lambda_cls,  # New
+        ss=ss,                # New
+        lwbr=lwbr,              # New
         in_channels=256,
         feat_channels=256,
         anchor_generator=dict(
@@ -39,7 +45,12 @@ model = dict(
         reg_decoded_bbox=True,
         loss_bbox=dict(type='IoULoss', linear=True, loss_weight=10.0),
         objectness_type='Centerness',
-        loss_objectness=dict(type='L1Loss', loss_weight=(1-lambda_cls)*1.0),
+        #loss_objectness=dict(type='L1Loss', loss_weight=1.0),
+        loss_objectness=dict(
+            type='QualityOnlyFocalLoss',
+            beta=2.0,
+            reduction='mean',
+            loss_weight=(1-lambda_cls)*1.0),
         ),
     roi_head=dict(
         type='OlnRoIHead',
@@ -50,7 +61,9 @@ model = dict(
             featmap_strides=[4, 8, 16, 32]),
         bbox_head=dict(
             type='Shared2FCBBoxHybridHead',
-            lambda_cls=lambda_cls,
+            lambda_cls=lambda_cls,      # New
+            ss=ss,                    # New
+            lwbr=lwbr,                  # New
             in_channels=256,
             fc_out_channels=1024,
             roi_feat_size=7,
@@ -67,7 +80,12 @@ model = dict(
                 ),
             loss_bbox=dict(type='L1Loss', loss_weight=1.0),
             bbox_score_type='BoxIoU',  # 'BoxIoU' or 'Centerness'
-            loss_bbox_score=dict(type='L1Loss', loss_weight=(1-lambda_cls)*1.0),
+            #loss_bbox_score=dict(type='L1Loss', loss_weight=1.0),
+            loss_bbox_score=dict(
+                type='QualityOnlyFocalLoss',
+                beta=2.0,
+                reduction='mean',
+                loss_weight=(1-lambda_cls)*1.0),
             )),
     # model training and testing settings
     train_cfg=dict(
@@ -100,6 +118,7 @@ model = dict(
                 add_gt_as_proposals=False),
             allowed_border=0,
             pos_weight=-1,
+            score_beta=2,  # New
             debug=False),
         rpn_proposal=dict(
             nms_across_levels=False,
@@ -123,6 +142,7 @@ model = dict(
                 neg_pos_ub=-1,
                 add_gt_as_proposals=True),
             pos_weight=-1,
+            score_beta=2, # New
             debug=False)),
     test_cfg=dict(
         rpn=dict(
@@ -145,26 +165,28 @@ model = dict(
     ))
 
 # Dataset
-dataset_type = 'ShipsSplitDataset'
-data_root = 'data/ShipRSImageNet/'
+dataset_type = 'CocoUSplitDataset'
+data_root = 'data/coco/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', with_bbox=True),
+    #dict(type='LoadAnnotations', with_bbox=True),
+    dict(type='LoadAnnotations', with_bbox=True, with_score=True),
     dict(type='MinIoURandomCrop', min_ious=(0.1, 0.3, 0.5, 0.7, 0.9), min_crop_size=0.3),  # crop
-    dict(type='Resize', img_scale=(930, 930), keep_ratio=False),  # zoom
+    dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),  # zoom
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
+    #dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_scores']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(930, 930),
+        img_scale=(1333, 800),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -176,37 +198,30 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=4,
+    samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
+        ann_file='out/oln_box/round0/voc_cz_hybrid_lc10_2x_r0/restricted_voc_annotations_for_round1_p70.json',
         is_class_agnostic=True,
-        train_class='warship',
-        eval_class='nonwarship',
+        train_class='voc',
+        eval_class='nonvoc',
         type=dataset_type,
-        ann_file=data_root + 'COCO_Format/ShipRSImageNet_bbox_train_level_3.json',
-        img_prefix=data_root + 'VOC_Format/JPEGImages/',
         pipeline=train_pipeline,
         ),
     val=dict(
         is_class_agnostic=True,
-        train_class='warship',
-        eval_class='nonwarship',
+        train_class='voc',
+        eval_class='nonvoc',
         type=dataset_type,
-        ann_file=data_root + 'COCO_Format/ShipRSImageNet_bbox_val_level_3.json',
-        img_prefix=data_root + 'VOC_Format/JPEGImages/',
         pipeline=test_pipeline),
     test=dict(
         is_class_agnostic=True,
-        train_class='warship',
-        eval_class='nonwarship',
+        train_class='voc',
+        eval_class='nonvoc',
         type=dataset_type,
-        ann_file=data_root + 'COCO_Format/ShipRSImageNet_bbox_val_level_3.json',
-        img_prefix=data_root + 'VOC_Format/JPEGImages/',
         pipeline=test_pipeline))
 
-evaluation = dict(interval=1, metric='bbox')
-
-checkpoint_config = dict(interval=0)
+checkpoint_config = dict(interval=2)
 # yapf:disable
 log_config = dict(
     interval=10,
@@ -217,8 +232,8 @@ log_config = dict(
 # yapf:enable
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = None
+load_from = 'out/oln_box/round0/voc_cz_hybrid_lc10_2x_r0/latest.pth'
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box_ships/round0/warship_cz_hybrid_lc20_r0/'
+work_dir='./out/oln_box/round1/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r1_p70'
