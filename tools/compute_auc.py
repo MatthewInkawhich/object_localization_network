@@ -23,9 +23,6 @@ def get_avg_recalls(logpath):
 
 
 
-
-
-
 def main():
     parser = argparse.ArgumentParser(description="Compute AUC")
     parser.add_argument(

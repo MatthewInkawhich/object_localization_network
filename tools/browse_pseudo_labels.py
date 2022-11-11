@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument(
         '--show-interval',
         type=float,
-        default=2,
+        default=1,
         help='the interval of show (s)')
     args = parser.parse_args()
     return args
@@ -68,6 +68,8 @@ def main():
         filename = os.path.join(args.output_dir,
                                 Path(item['filename']).name
                                 ) if args.output_dir is not None else None
+        if filename:
+            filename = filename.replace('.bmp', '.jpg')
 
         gt_masks = item.get('gt_masks', None)
         if gt_masks is not None:
@@ -77,20 +79,20 @@ def main():
         print("\n\n", i)
 
         # Only consider certain examples...
-        #gt_count = 0
-        #pl_count = 0
-        #pl_check = True
-        #for j in range(len(item['gt_scores'])):
-        #    if item['gt_scores'][j] < 1:
-        #        pl_count += 1
-        #    else:
-        #        gt_count += 1
-        #if gt_count < 1 or pl_count < 1:
-        #    print("SKIPPING...")    
-        #    continue
+        gt_count = 0
+        pl_count = 0
+        pl_check = True
+        for j in range(len(item['gt_scores'])):
+            if item['gt_scores'][j] < 1:
+                pl_count += 1
+            else:
+                gt_count += 1
+        if gt_count < 1 or pl_count < 1:
+            print("SKIPPING...")    
+            continue
 
-        #for k,v in item.items():
-        #    print("\n",k,v)
+        for k,v in item.items():
+            print("\n",k,v)
 
         # Separate original GT from pseudo-labels
         gt_bboxes = []
@@ -136,7 +138,7 @@ def main():
                 text_color=(255,17,0),
                 thickness=thickness,
                 fig_size=fig_size,
-                #show=(not args.not_show)
+                show=(not args.not_show),
                 wait_time=args.show_interval,
                 out_file=filename,
             )
@@ -148,11 +150,11 @@ def main():
                 item['img'],
                 np.stack(pl_bboxes, axis=0),
                 np.array(pl_labels),
-                bbox_color=(17, 255, 0),
-                text_color=(17, 255, 0),
+                bbox_color=(255, 255, 0),
+                text_color=(255, 255, 0),
                 thickness=thickness,
                 fig_size=fig_size,
-                #show=(not args.not_show)
+                show=(not args.not_show),
                 wait_time=args.show_interval,
                 out_file=filename,
             )
@@ -176,11 +178,11 @@ def main():
                 img,
                 np.stack(pl_bboxes, axis=0),
                 np.array(pl_labels),
-                bbox_color=(17, 255, 0),
-                text_color=(17, 255, 0),
+                bbox_color=(255, 255, 0),
+                text_color=(255, 255, 0),
                 thickness=thickness,
                 fig_size=fig_size,
-                #show=(not args.not_show)
+                show=(not args.not_show),
                 wait_time=args.show_interval,
                 out_file=filename,
             )

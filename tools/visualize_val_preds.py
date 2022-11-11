@@ -119,6 +119,8 @@ def main():
         # because there is a risk of mismatch
         item = dataset.prepare_train_img(i)
         filename = os.path.join(args.output_dir, item['ori_filename']) if args.output_dir is not None else None
+        if filename:
+            filename = filename.replace('.bmp', '.jpg')
         print("\n\nitem:")
         for k,v in item.items():
             print(k,v)
@@ -150,7 +152,7 @@ def main():
         # Plot pred boxes
         thickness = 1.5
         fig_size = (8, 6)
-        box_color = (255, 255, 0)
+        box_color = (17, 255, 0)
         imshow_det_bboxes(
             img_gt,
             filtered_curr_pred_bboxes,

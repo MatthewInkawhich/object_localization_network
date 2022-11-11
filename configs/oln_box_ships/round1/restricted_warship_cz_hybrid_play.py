@@ -1,7 +1,5 @@
 _base_ = [
-    '../../_base_/datasets/coco_detection.py',
-    '../../_base_/schedules/schedule_ft4.py', 
-    '../../_base_/default_runtime.py'
+    '../../_base_/schedules/schedule_ft50.py', 
 ]
 # model settings
 lambda_cls = 0.10
@@ -25,10 +23,7 @@ model = dict(
         out_channels=256,
         num_outs=5),
     rpn_head=dict(
-        type='HybridOlnRPNHead',
-        lambda_cls=lambda_cls,  # New
-        ss=ss,                # New
-        lwbr=lwbr,              # New
+        type='OlnRPNHead',
         in_channels=256,
         feat_channels=256,
         anchor_generator=dict(
@@ -60,10 +55,7 @@ model = dict(
             out_channels=256,
             featmap_strides=[4, 8, 16, 32]),
         bbox_head=dict(
-            type='Shared2FCBBoxHybridHead',
-            lambda_cls=lambda_cls,      # New
-            ss=ss,                    # New
-            lwbr=lwbr,                  # New
+            type='Shared2FCBBoxScoreHead',
             in_channels=256,
             fc_out_channels=1024,
             roi_feat_size=7,
@@ -111,7 +103,7 @@ model = dict(
                 ignore_iof_thr=-1),
             objectness_sampler=dict(
                 type='RandomSampler',
-                num=256,
+                num=128,
                 # Ratio 0 for negative samples.
                 pos_fraction=1.,
                 neg_pos_ub=-1,
@@ -165,8 +157,8 @@ model = dict(
     ))
 
 # Dataset
-dataset_type = 'CocoUSplitDataset'
-data_root = 'data/coco/'
+dataset_type = 'ShipsUSplitDataset'
+data_root = 'data/ShipRSImageNet/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -174,7 +166,7 @@ train_pipeline = [
     #dict(type='LoadAnnotations', with_bbox=True),
     dict(type='LoadAnnotations', with_bbox=True, with_score=True),
     dict(type='MinIoURandomCrop', min_ious=(0.1, 0.3, 0.5, 0.7, 0.9), min_crop_size=0.3),  # crop
-    dict(type='Resize', img_scale=(1333, 800), keep_ratio=False),  # zoom
+    dict(type='Resize', img_scale=(930, 930), keep_ratio=False),  # zoom
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
@@ -186,7 +178,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(1333, 800),
+        img_scale=(930, 930),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -198,30 +190,37 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=2,
+    samples_per_gpu=1,
+    workers_per_gpu=1,
     train=dict(
-        ann_file='out/oln_box/round2/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r2_p90_p90/restricted_voc_annotations_for_round3_p90.json',
+        ann_file='out/oln_box_ships/round0/warship_cz_hybrid_lc10_r0/restricted_warship_annotations_for_round1_p30.json',
+        img_prefix=data_root + 'VOC_Format/JPEGImages/',
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='warship',
+        eval_class='nonwarship',
         type=dataset_type,
         pipeline=train_pipeline,
         ),
     val=dict(
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='warship',
+        eval_class='nonwarship',
         type=dataset_type,
+        ann_file=data_root + 'COCO_Format/ShipRSImageNet_bbox_val_level_3.json',
+        img_prefix=data_root + 'VOC_Format/JPEGImages/',
         pipeline=test_pipeline),
     test=dict(
         is_class_agnostic=True,
-        train_class='voc',
-        eval_class='nonvoc',
+        train_class='warship',
+        eval_class='nonwarship',
         type=dataset_type,
+        ann_file=data_root + 'COCO_Format/ShipRSImageNet_bbox_val_level_3.json',
+        img_prefix=data_root + 'VOC_Format/JPEGImages/',
         pipeline=test_pipeline))
 
-checkpoint_config = dict(interval=2)
+evaluation = dict(interval=1, metric='bbox')
+
+checkpoint_config = dict(interval=25)
 # yapf:disable
 log_config = dict(
     interval=10,
@@ -232,8 +231,8 @@ log_config = dict(
 # yapf:enable
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = 'out/oln_box/round2/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r2_p90_p90/latest.pth'
+load_from = 'out/oln_box_ships/round0/warship_cz_hybrid_lc10_r0/latest.pth'
 resume_from = None
 workflow = [('train', 1)]
 
-work_dir='./out/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p90_p90_p90'
+work_dir='./out/oln_box_ships/round1/restricted_warship_cz_hybrid_play'

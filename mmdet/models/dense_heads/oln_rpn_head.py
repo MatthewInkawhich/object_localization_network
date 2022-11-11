@@ -131,10 +131,10 @@ class OlnRPNHead(RPNHead):
         cls_score = cls_score.permute(0, 2, 3,
                                       1).reshape(-1, self.cls_out_channels)
 
-        #print("labels:", labels, labels.shape)
-        #print("label_weights:", label_weights, label_weights.shape)
-        #print("cls_score:", cls_score, cls_score.shape)
-        #print("num_total_samples:", num_total_samples)
+        print("labels:", labels, labels.shape)
+        print("label_weights:", label_weights, label_weights.shape, label_weights.sum())
+        print("cls_score:", cls_score, cls_score.shape)
+        print("num_total_samples:", num_total_samples)
         #exit()
 
         loss_cls = self.loss_cls(
@@ -150,6 +150,10 @@ class OlnRPNHead(RPNHead):
             # decodes the already encoded coordinates to absolute format.
             anchors = anchors.reshape(-1, 4)
             bbox_pred = self.bbox_coder.decode(anchors, bbox_pred)
+        print("\n\nbbox_pred:", bbox_pred, bbox_pred.shape)
+        print("bbox_targets:", bbox_targets, bbox_targets.shape)
+        print("bbox_weights:", bbox_weights, bbox_weights.shape, bbox_weights.sum())
+        print("num_total_samples:", num_total_samples)
         loss_bbox = self.loss_bbox(
             bbox_pred,
             bbox_targets,
@@ -169,6 +173,10 @@ class OlnRPNHead(RPNHead):
         #exit()
 
         # Mink
+        print("\n\nobjectness_score:", objectness_score, objectness_score.shape)
+        print("objectness_targets:", objectness_targets, objectness_targets.shape)
+        print("objectness_weights:", objectness_weights, objectness_weights.shape, objectness_weights.sum())
+        print("num_total_samples:", num_total_samples)
         if self.qofl:        
             loss_objectness = self.loss_objectness(
                 objectness_score,  # We apply sigmoid in BCEwithlogits 
@@ -181,6 +189,11 @@ class OlnRPNHead(RPNHead):
                 objectness_targets, 
                 objectness_weights, 
                 avg_factor=num_total_samples)
+
+        print("\n\nloss_cls:", loss_cls) 
+        print("loss_bbox:", loss_bbox)
+        print("loss_objectness:", loss_objectness)
+        exit()
 
         return loss_cls, loss_bbox, loss_objectness
 
@@ -218,6 +231,7 @@ class OlnRPNHead(RPNHead):
         """
         featmap_sizes = [featmap.size()[-2:] for featmap in cls_scores]
         assert len(featmap_sizes) == self.anchor_generator.num_levels
+        #print("featmap_sizes:", featmap_sizes)
 
         device = cls_scores[0].device
 
