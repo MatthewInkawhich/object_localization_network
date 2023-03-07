@@ -1,0 +1,35 @@
+#!/bin/bash
+
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'nonhcoco' 0 4 
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'hcoco_nou' 0 4 
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'all_nou' 0 4 
+echo "DONE hcoco lc=0"
+
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'nonhcoco' 0.25 4 
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'hcoco_nou' 0.25 4 
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'all_nou' 0.25 4 
+echo "DONE hcoco lc=0.25"
+
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'nonhcoco' 0.5 4 
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'hcoco_nou' 0.5 4 
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_hcoco_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'all_nou' 0.5 4 
+echo "DONE hcoco lc=0.5"
+
+
+
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'nonvoc' 0 4 
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'voc_nou' 0 4 
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'all_nou' 0 4 
+echo "DONE voc lc=0"
+
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'nonvoc' 0.25 4 
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'voc_nou' 0.25 4 
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'all_nou' 0.25 4 
+echo "DONE voc lc=0.25"
+
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'nonvoc' 0.5 4 
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'voc_nou' 0.5 4 
+bash tools/dist_test_bbox_evalclass_testlc.sh configs/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30.py out/oln_box/round3/restricted_voc_cz_hybrid_lc10_lateqflwbbl2_2x_r3_p30_p30_p30/latest.pth 'all_nou' 0.5 4 
+echo "DONE voc lc=0.5"
+
+

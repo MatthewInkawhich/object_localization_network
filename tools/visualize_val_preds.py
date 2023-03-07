@@ -167,6 +167,7 @@ def main():
         )
 
 
+        # Stop after a certain num of images
         if i == 200:
             print("done!")
             exit()

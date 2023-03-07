@@ -172,6 +172,7 @@ def main():
         shuffle=False)
 
     # build the model and load checkpoint
+    print("RPN/RoI lambda_cls:", cfg.model.rpn_head.lambda_cls, cfg.model.roi_head.bbox_head.lambda_cls)
     cfg.model.train_cfg = None
     model = build_detector(cfg.model, test_cfg=cfg.get('test_cfg'))
     fp16_cfg = cfg.get('fp16', None)
